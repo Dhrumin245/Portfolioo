@@ -1,0 +1,13 @@
+{
+  "name": "portfolioo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix my-app\" \"npm run server --prefix Backend\"",
+    "build": "npm run build --prefix my-app",
+    "start": "npm run start --prefix Backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
