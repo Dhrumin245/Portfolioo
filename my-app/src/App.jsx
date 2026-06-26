@@ -1,73 +1,159 @@
-import { useEffect } from 'react';
-import { useState, useRef } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
-import ProjectDetails from './pages/ProjectDetails';
-import SkillsPage from './pages/SkillsPage';
-import aboutMeImage from './assets/Dhrumin_photo.jpg';
+import { useEffect, useState } from 'react';
+import { Link, Route, Routes, useParams } from 'react-router-dom';
 import './assets/css/style.css';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from './components/animations/Animations/SplashCursor/SplashCursor';
-import * as THREE from 'three';
+
 gsap.registerPlugin(ScrollTrigger);
 
-function App() {
+const navItems = [
+  { label: 'Services', href: '#services' },
+  { label: 'Work', href: '#work' },
+  { label: 'Why Us', href: '#why-us' },
+  { label: 'Process', href: '#process' },
+  { label: 'Contact', href: '#contact' },
+];
 
+const services = [
+  {
+    title: 'AI-Built Websites',
+    description:
+      'High-converting company sites, landing pages, and product pages drafted fast with AI and refined by designers and frontend engineers.',
+  },
+  {
+    title: 'API Engineering',
+    description:
+      'Secure, documented REST and integration APIs that connect products, CRMs, payment systems, dashboards, and internal workflows.',
+  },
+  {
+    title: 'Web App Development',
+    description:
+      'Custom SaaS tools, admin panels, portals, dashboards, and workflow apps built around the way your team actually works.',
+  },
+  {
+    title: 'AI Workflow Automation',
+    description:
+      'AI agents, prompt systems, data flows, and automation layers that reduce repetitive work while staying reviewable and controlled.',
+  },
+  {
+    title: 'Product UI Systems',
+    description:
+      'Fast, polished interfaces with reusable components, responsive states, and clean handoff for future product growth.',
+  },
+  {
+    title: 'Cloud Launch Support',
+    description:
+      'Deployment, monitoring, CI/CD, and production checks so your product launches cleanly and keeps running after handoff.',
+  },
+];
+
+const projects = [
+  {
+    title: 'AstraOps Client Portal',
+    slug: 'astraops-client-portal',
+    category: 'Web App',
+    description:
+      'A self-serve client workspace for requests, approvals, files, and project updates. AI drafted the workflows; engineers hardened auth, roles, and edge cases.',
+    stack: ['React', 'Node', 'Postgres'],
+  },
+  {
+    title: 'PulseAPI Integration Layer',
+    slug: 'pulseapi-integration-layer',
+    category: 'API',
+    description:
+      'A secure API layer connecting CRM, billing, analytics, and support data into one operational source of truth.',
+    stack: ['REST', 'Auth', 'Webhooks'],
+  },
+  {
+    title: 'LaunchGrid Marketing Site',
+    slug: 'launchgrid-marketing-site',
+    category: 'Website',
+    description:
+      'A fast conversion site with service pages, lead forms, analytics events, and AI-assisted content reviewed for clarity.',
+    stack: ['Vite', 'SEO', 'Analytics'],
+  },
+];
+
+const reasons = [
+  {
+    title: 'AI speed without AI risk',
+    body:
+      'AI accelerates drafts, scaffolds, tests, and content. Humans review decisions, architecture, security, and the final user experience.',
+  },
+  {
+    title: 'No black-box delivery',
+    body:
+      'You see what is being built, why it is being built, and what changed after human review. The process stays visible.',
+  },
+  {
+    title: 'Built for real business use',
+    body:
+      'We focus on the workflows, conversion paths, APIs, and admin screens that make your company faster after launch.',
+  },
+  {
+    title: 'Fast does not mean fragile',
+    body:
+      'Every release goes through manual QA, integration checks, responsive review, and production-readiness checks before handoff.',
+  },
+];
+
+const processSteps = [
+  {
+    title: 'Discovery',
+    description: 'We map your business goal, users, integrations, timeline, and launch constraints.',
+    badge: 'Human-led',
+  },
+  {
+    title: 'AI-assisted build',
+    description: 'AI helps produce drafts, components, API contracts, content, and test cases at speed.',
+    badge: 'AI-accelerated',
+  },
+  {
+    title: 'Human review',
+    description: 'Engineers review logic, security, UX, accessibility, performance, and maintainability.',
+    badge: 'Human-verified',
+  },
+  {
+    title: 'Launch and improve',
+    description: 'We deploy, monitor, fix, document, and help you decide the next valuable iteration.',
+    badge: 'Launch-ready',
+  },
+];
+
+const benefits = [
+  { value: '3x', label: 'faster first versions' },
+  { value: '100%', label: 'human-reviewed output' },
+  { value: '0', label: 'blind AI handoffs' },
+  { value: '24h', label: 'response on new briefs' },
+];
+
+function HomePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name, email, message })
-    });
-
-    if (res.ok) {
-      alert('Message sent successfully!');
-      setName('');
-      setEmail('');
-      setMessage('');
-    } else {
-      alert('Failed to send message');
-    }
-  } catch (error) {
-    console.error('Error submitting contact form:', error);
-    alert('Something went wrong!');
-  }
-};
-
-  const handleDownloadResume = async () => {
+    e.preventDefault();
     try {
-      const res = await fetch('/api/resume');
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, message }),
+      });
+
       if (res.ok) {
-        const blob = await res.blob();
-        const contentDisposition = res.headers.get('Content-Disposition');
-        let filename = 'resume.pdf';
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch) {
-            filename = filenameMatch[1];
-          }
-        }
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        alert('Project brief sent successfully!');
+        setName('');
+        setEmail('');
+        setMessage('');
       } else {
-        alert('Failed to download resume');
+        alert('Failed to send project brief');
       }
     } catch (error) {
-      console.error('Error downloading resume:', error);
+      console.error('Error submitting contact form:', error);
       alert('Something went wrong!');
     }
   };
@@ -76,121 +162,83 @@ function App() {
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
     const navLinksItems = document.querySelectorAll('.nav-links li');
+    const header = document.getElementById('header');
+    const anchors = document.querySelectorAll('a[href^="#"]');
 
-    hamburger.addEventListener('click', () => {
+    const handleMenuToggle = () => {
       navLinks.classList.toggle('active');
       hamburger.classList.toggle('active');
-    });
+    };
 
-    navLinksItems.forEach((item) => {
-      item.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        hamburger.classList.remove('active');
-      });
-    });
+    const handleMenuClose = () => {
+      navLinks.classList.remove('active');
+      hamburger.classList.remove('active');
+    };
 
-    const header = document.getElementById('header');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 100) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
+    const handleScroll = () => {
+      header.classList.toggle('scrolled', window.scrollY > 80);
+    };
+
+    const handleAnchorClick = (e) => {
+      e.preventDefault();
+      const targetId = e.currentTarget.getAttribute('href');
+      if (targetId === '#') return;
+
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 80,
+          behavior: 'smooth',
+        });
       }
+    };
+
+    hamburger.addEventListener('click', handleMenuToggle);
+    navLinksItems.forEach((item) => item.addEventListener('click', handleMenuClose));
+    window.addEventListener('scroll', handleScroll);
+    anchors.forEach((anchor) => anchor.addEventListener('click', handleAnchorClick));
+
+    gsap.from('.hero-copy > *', {
+      duration: 0.9,
+      y: 28,
+      opacity: 0,
+      stagger: 0.12,
+      ease: 'power3.out',
     });
 
-    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-          window.scrollTo({
-            top: targetElement.offsetTop - 80,
-            behavior: 'smooth',
-          });
-        }
-      });
+    gsap.from('.hero-console', {
+      duration: 1.1,
+      x: 70,
+      opacity: 0,
+      ease: 'power3.out',
     });
 
-    // Debug: Check if GSAP is loaded
-    console.log('GSAP:', typeof gsap !== 'undefined' ? 'Loaded' : 'Not loaded');
-
-    // Debug: Check if elements exist
-    const heroH1 = document.querySelector('.hero-content h1');
-    const heroP = document.querySelector('.hero-content p');
-    const heroBtns = document.querySelector('.hero-btns');
-    const heroImage = document.querySelector('.hero-image');
-    console.log('hero-content h1:', heroH1);
-    console.log('hero-content p:', heroP);
-    console.log('hero-btns:', heroBtns);
-    console.log('hero-image:', heroImage);
-
-    // Debug: Animate only if elements exist
-    if (heroH1) {
-      gsap.from(heroH1, {
-        duration: 1,
-        y: 50,
+    gsap.utils.toArray('.reveal').forEach((item) => {
+      gsap.from(item, {
+        scrollTrigger: {
+          trigger: item,
+          start: 'top 82%',
+          toggleActions: 'play none none none',
+        },
         opacity: 0,
-        ease: 'power3.out',
-        onStart: () => console.log('Animating hero h1'),
+        y: 36,
+        duration: 0.8,
       });
-    } else {
-      console.warn('hero-content h1 not found');
-    }
-
-    if (heroP) {
-      gsap.from(heroP, {
-        duration: 1,
-        y: 50,
-        opacity: 0,
-        delay: 0.3,
-        ease: 'power3.out',
-        onStart: () => console.log('Animating hero p'),
-      });
-    } else {
-      console.warn('hero-content p not found');
-    }
-
-    if (heroBtns) {
-      gsap.from(heroBtns, {
-        duration: 1,
-        y: 50,
-        opacity: 0,
-        delay: 0.6,
-        ease: 'power3.out',
-        onStart: () => console.log('Animating hero btns'),
-      });
-    } else {
-      console.warn('hero-btns not found');
-    }
-
-    if (heroImage) {
-      gsap.from(heroImage, {
-        duration: 1.5,
-        x: 100,
-        opacity: 0,
-        delay: 0.3,
-        ease: 'power3.out',
-        onStart: () => console.log('Animating hero image'),
-      });
-    } else {
-      console.warn('hero-image not found');
-    }
+    });
 
     gsap.to('.shape-1', {
       duration: 20,
-      x: 200,
-      y: 150,
+      x: 160,
+      y: 120,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
     });
 
     gsap.to('.shape-2', {
-      duration: 25,
-      x: -150,
-      y: -200,
+      duration: 24,
+      x: -140,
+      y: -170,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
@@ -199,108 +247,40 @@ function App() {
     gsap.to('.shape-3', {
       duration: 18,
       x: 100,
-      y: -100,
+      y: -90,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
     });
 
-    gsap.utils.toArray('.section').forEach((section) => {
-      gsap.from(section, {
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-        opacity: 0,
-        y: 50,
-        duration: 1,
-      });
-    });
-
-    gsap.utils.toArray('.skill-card').forEach((card, i) => {
-      gsap.from(card, {
-        scrollTrigger: {
-          trigger: card,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-        opacity: 0,
-        y: 50,
-        duration: 0.5,
-        delay: i * 0.1,
-      });
-    });
-
-    gsap.utils.toArray('.project-card').forEach((card, i) => {
-      gsap.from(card, {
-        scrollTrigger: {
-          trigger: card,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-        opacity: 0,
-        y: 50,
-        duration: 0.5,
-        delay: i * 0.1,
-      });
-    });
-
-    gsap.from('.contact-form', {
-      scrollTrigger: {
-        trigger: '.contact-form',
-        start: 'top 80%',
-        toggleActions: 'play none none none',
-      },
-      opacity: 0,
-      y: 50,
-      duration: 1,
-    });
-
-    document.querySelectorAll('.skill-card, .project-card').forEach((card) => {
-      card.addEventListener('mouseenter', () => {
-        gsap.to(card, {
-          duration: 0.3,
-          scale: 1.02,
-          ease: 'power2.out',
-        });
-      });
-
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, {
-          duration: 0.3,
-          scale: 1,
-          ease: 'power2.out',
-        });
-      });
-    });
-
-    // Particle Canvas
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const particles = [];
-    const particleCount = window.innerWidth < 768 ? 50 : 100;
+    const particleCount = window.innerWidth < 768 ? 45 : 90;
+    let animationFrameId;
 
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 1 - 0.5;
-        this.speedY = Math.random() * 1 - 0.5;
-        this.color = `rgba(${Math.floor(Math.random() * 56 + 200)}, ${Math.floor(
-          Math.random() * 56
-        )}, 255, ${Math.random() * 0.5 + 0.1})`;
+        this.size = Math.random() * 2.5 + 1;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.speedY = Math.random() * 0.8 - 0.4;
+        this.color = `rgba(${Math.floor(Math.random() * 40 + 180)}, ${Math.floor(
+          Math.random() * 90 + 40
+        )}, 255, ${Math.random() * 0.45 + 0.12})`;
       }
+
       update() {
         this.x += this.speedX;
         this.y += this.speedY;
         if (this.x < 0 || this.x > canvas.width) this.speedX = -this.speedX;
         if (this.y < 0 || this.y > canvas.height) this.speedY = -this.speedY;
       }
+
       draw() {
         ctx.fillStyle = this.color;
         ctx.beginPath();
@@ -324,9 +304,9 @@ function App() {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 100) {
-            ctx.strokeStyle = `rgba(110, 0, 255, ${1 - distance / 100})`;
-            ctx.lineWidth = 0.5;
+          if (distance < 105) {
+            ctx.strokeStyle = `rgba(0, 212, 255, ${1 - distance / 105})`;
+            ctx.lineWidth = 0.45;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -334,346 +314,530 @@ function App() {
           }
         }
       }
-      requestAnimationFrame(animateParticles);
+      animationFrameId = requestAnimationFrame(animateParticles);
     }
 
-    window.addEventListener('resize', () => {
+    const handleCanvasResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-    });
+    };
 
+    window.addEventListener('resize', handleCanvasResize);
     initParticles();
     animateParticles();
 
-    // Three.js Rotating Wireframe Ball
-    const heroCanvas = document.getElementById('hero-canvas');
-    if (heroCanvas) {
-      const heroImage = document.querySelector('.hero-image');
-      if (heroImage) {
-        // Increase canvas size to 1.5 times heroImage container size for bigger ball
-        heroCanvas.width = 400;
-        heroImage.clientWidth * 1.2; 
-        heroCanvas.height = 400;
-        heroImage.clientHeight * 2.5;
-        heroCanvas.style.position = 'absolute';
-        heroCanvas.style.top = '-20';
-        heroCanvas.style.left = '-20%';
-      }
-
-      // Scene
-      const scene = new THREE.Scene();
-
-      // Camera
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        heroCanvas.width/ heroCanvas.height,
-        0.1,
-        100
-      );
-      camera.position.z = 13; // Adjust camera position to fit ball inside canvas
-
-      // Renderer
-      const renderer = new THREE.WebGLRenderer({
-        canvas: heroCanvas,
-        alpha: true,
-        antialias: true
-      });
-      renderer.setSize(heroCanvas.width, heroCanvas.height);
-      renderer.setClearColor(0x000000, 0);
-
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0x404040);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0x00f0ff, 1);
-      directionalLight.position.set(1, 1, 1);
-      scene.add(directionalLight);
-
-      const directionalLight2 = new THREE.DirectionalLight(0x7b2dff, 1);
-      directionalLight2.position.set(-1, -1, -1);
-      scene.add(directionalLight2);
-
-      // Geometry (wireframe icosahedron)
-      const geometry = new THREE.IcosahedronGeometry(7, 4); // Larger geometry for bigger ball
-
-      // Material
-      const material = new THREE.MeshPhongMaterial({
-        color: 0x00f0ff,
-        emissive: 0x00f0ff,
-        emissiveIntensity: 0.2,
-        specular: 0x7b2dff,
-        shininess: 30,
-        transparent: true,
-        opacity: 0.9,
-        wireframe: true
-      });
-
-      // Mesh
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.x = 0;
-      mesh.position.y = 0;
-      scene.add(mesh);
-
-      // Animation loop
-      function animate() {
-        requestAnimationFrame(animate);
-        mesh.rotation.x += 0.005;
-        mesh.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
-
-      // Handle resize
-      const handleResize = () => {
-        if (heroImage) {
-          heroCanvas.width = heroImage.clientWidth;
-          heroCanvas.height = heroImage.clientHeight;
-          heroCanvas.style.left = '-25%';
-        }
-        camera.aspect = heroCanvas.width / heroCanvas.height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(heroCanvas.width, heroCanvas.height);
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      animate();
-    }
+    return () => {
+      hamburger.removeEventListener('click', handleMenuToggle);
+      navLinksItems.forEach((item) => item.removeEventListener('click', handleMenuClose));
+      window.removeEventListener('scroll', handleScroll);
+      anchors.forEach((anchor) => anchor.removeEventListener('click', handleAnchorClick));
+      window.removeEventListener('resize', handleCanvasResize);
+      cancelAnimationFrame(animationFrameId);
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
   }, []);
 
   return (
     <>
       <SplashCursor />
-      {/* Background */}
       <div className="bg-shapes">
         <div className="shape shape-1"></div>
         <div className="shape shape-2"></div>
         <div className="shape shape-3"></div>
       </div>
       <canvas id="particle-canvas"></canvas>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
 
-              <header id="header">
-                <div className="container">
-                  <nav>
-                    <a href="#" className="logo">Dhrumin<span> Gogari</span></a>
-                    <ul className="nav-links">
-                      <li><a href="#about">About</a></li>
-                      <li><a href="#skills">Skills</a></li>
-                      <li><a href="#projects">Projects</a></li>
-                      <li><a href="#contact">Contact</a></li>
-                    </ul>
-                    <div className="hamburger">
-                      <div></div>
-                      <div></div>
-                      <div></div>
-                    </div>
-                  </nav>
-                </div>
-              </header>
+      <header id="header">
+        <div className="container">
+          <nav>
+            <Link to="/" className="logo">
+              Dhrumin's <span>Tech world</span>
+            </Link>
+            <ul className="nav-links">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+            <a href="#contact" className="nav-cta">
+              Start a Project
+            </a>
+            <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </nav>
+        </div>
+      </header>
 
-              {/* Hero Section */}
-              <section className="hero">
-                <div className="container">
-                  <div className="hero-content">
-                    <h1>Decoding Patterns Delivering Impact</h1>
-                    <p>I’m a Data Scientist skilled in uncovering insights, building predictive models, and driving smarter strategies with clean, meaningful data.</p>
-                    <div className="hero-btns">
-                      <a href="#projects" className="btn btn-primary">View My Work</a>
-                      <a href="#contact" className="btn btn-secondary">Hire Me</a>
-                    </div>
-                  </div>
-                  <div className="hero-image">
-                    <canvas id="hero-canvas"></canvas>
-                  </div>
-                </div>
-              </section>
+      <main>
+        <section className="hero" id="home">
+          <div className="container hero-grid">
+            <div className="hero-copy">
+              <span className="hero-tag">AI-built. Human-approved.</span>
+              <h1>
+                Software built by AI.
+                <span> Perfected by humans.</span>
+              </h1>
+              <p>
+                We design and ship websites, APIs, and web apps at AI speed, then put every
+                decision through real engineering review. Fast output. Human accountability.
+                No blind automation.
+              </p>
+              <div className="hero-btns">
+                <a href="#contact" className="btn btn-primary">
+                  Build With Us
+                </a>
+                <a href="#work" className="btn btn-secondary">
+                  See The Work
+                </a>
+              </div>
+            </div>
 
-              {/* About Section */}
-              <section className="section" id="about">
-                <div className="container">
-                  <div className="section-title">
-                    <h2>About Me</h2>
-                  </div>
-                  <div className="about-content">
-                    <div className="about-image">
-                      <img
-                        src={aboutMeImage}
-                        alt="Developer"
-                      />
-                    </div>
-                    <div className="about-text">
-                      <h3>Turning Data into Decisions</h3>
-                      <p>
-                        I'm a Data Scientist driven by curiosity and a deep interest in uncovering patterns that lead to smarter outcomes. I enjoy working with data—cleaning it, analyzing it, and building models that help solve real-world problems.
-                      </p>
-                      <p>
-                        With hands-on experience in data analysis, visualization, and machine learning, I focus on delivering insights that are not only accurate but also meaningful. I believe in writing clean, reproducible code and using data storytelling to make complex information understandable
-                      </p>
-                      <p>
-                        Whether it's exploring trends, building predictive models, or automating reports, I approach every project with a focus on learning, impact, and continuous improvement.
-                      </p>
-                      <button onClick={handleDownloadResume} className="btn btn-primary">Download Resume</button>
-                    </div>
-                  </div>
-                </div>
-              </section>
+            <div className="hero-console">
+              <div className="console-header">
+                <span>Build Pipeline</span>
+                <strong>Live</strong>
+              </div>
+              <div className="console-line active">
+                <span>01</span>
+                <p>AI drafts architecture, screens, APIs, and test cases.</p>
+              </div>
+              <div className="console-line active">
+                <span>02</span>
+                <p>Senior engineers review logic, security, UX, and edge cases.</p>
+              </div>
+              <div className="console-line">
+                <span>03</span>
+                <p>Production build is tested, deployed, documented, and monitored.</p>
+              </div>
+              <div className="console-note">No generated code ships without human sign-off.</div>
+            </div>
+          </div>
 
-              {/* Skills Section */}
-              <section className="section" id="skills">
-                <div className="container">
-                  <div className="section-title">
-                    <h2>My Skills</h2>
-                  </div>
-                  <div className="skills-container">
-                    <div className="skill-card">
-                      <i className="fab fa-python"></i>
-                      <h3>Python Development</h3>
-                      <p>Expertise in Python programming, including advanced concepts like decorators, generators, and context managers.</p>
-                    </div>
-                    <div className="skill-card">
-                      <i className="fas fa-server"></i>
-                      <h3>Backend Development</h3>
-                      <p>Building robust backend systems with Django, Flask, and FastAPI for web applications and APIs.</p>
-                    </div>
-                    <div className="skill-card">
-                      <i className="fas fa-database"></i>
-                      <h3>Database Management</h3>
-                      <p>Working with SQL and NoSQL databases including PostgreSQL, MySQL, MongoDB, and Redis.</p>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                    <Link to="/skills" className="btn btn-primary">View More Skills</Link>
-                  </div>
-                </div>
-              </section>
+          <div className="stats-bar">
+            {benefits.map((item) => (
+              <div className="stat-item" key={item.label}>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-              {/* Projects Section */}
-              <section className="section projects" id="projects">
-                <div className="container">
-                  <div className="section-title">
-                    <h2>Featured Projects</h2>
-                  </div>
-                  <div className="projects-container">
-                    <div className="project-card">
-                      <div className="project-image">
-                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80" alt="E-commerce API" />
-                      </div>
-                      <div className="project-content">
-                        <h3>E-commerce API</h3>
-                        <p>Built a scalable e-commerce backend API with Django REST Framework, handling thousands of requests per second.</p>
-                        <div className="project-tags">
-                          <span className="tag">Python</span>
-                          <span className="tag">Django</span>
-                          <span className="tag">REST API</span>
-                        </div>
-                        <Link to="/project/ecommerce-api" className="view-project">View Project →</Link>
-                      </div>
-                    </div>
-                    <div className="project-card">
-                      <div className="project-image">
-                        <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80" alt="Data Pipeline" />
-                      </div>
-                      <div className="project-content">
-                        <h3>Data Processing Pipeline</h3>
-                        <p>Developed a high-performance data pipeline for processing and analyzing large datasets with Python and Apache Spark.</p>
-                        <div className="project-tags">
-                          <span className="tag">Python</span>
-                          <span className="tag">Spark</span>
-                          <span className="tag">Pandas</span>
-                        </div>
-                        <Link to="/project/data-pipeline" className="view-project">View Project →</Link>
-                      </div>
-                    </div>
-                    <div className="project-card">
-                      <div className="project-image">
-                        <img src="src/assets/Dhrumin_photo" alt="Automation Tool" />
-                      </div>
-                      <div className="project-content">
-                        <h3>Workflow Automation</h3>
-                        <p>Created an automation tool that reduced manual work by 80% by automating repetitive tasks across multiple systems.</p>
-                        <div className="project-tags">
-                          <span className="tag">Python</span>
-                          <span className="tag">Automation</span>
-                          <span className="tag">Selenium</span>
-                        </div>
-                        <Link to="/project/workflow-automation" className="view-project">View Project →</Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
+        <section className="section intro-band reveal">
+          <div className="container intro-grid">
+            <h2>Most teams choose between speed and quality. We built a process for both.</h2>
+            <p>
+              AI handles the heavy lift: drafts, boilerplate, UI states, API contracts, and
+              repetitive code. Humans handle judgment: product clarity, architecture,
+              security, performance, QA, and final polish.
+            </p>
+          </div>
+        </section>
 
-              {/* Contact Section */}
-              <section className="section" id="contact">
-                <div className="container">
-                  <div className="section-title">
-                    <h2>Get In Touch</h2>
-                  </div>
-                  <form className="contact-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                      <label htmlFor="name">Name</label>
-                      <input
-                        type="text"
-                        id="name"
-                        className="form-control"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="email">Email</label>
-                      <input
-                        type="email"
-                        id="email"
-                        className="form-control"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="message">Message</label>
-                      <textarea
-                        id="message"
-                        className="form-control"
-                        required
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      ></textarea>
-                    </div>
-                    <button type="submit" className="submit-btn">Send Message</button>
-                  </form>
-                </div>
-              </section>
+        <section className="section" id="services">
+          <div className="container">
+            <div className="section-title reveal">
+              <span className="section-kicker">Core Services</span>
+              <h2>Everything a modern company needs to launch online.</h2>
+              <p>Built with AI acceleration. Reviewed by humans who know what production means.</p>
+            </div>
+            <div className="services-grid">
+              {services.map((service, index) => (
+                <article className="service-card reveal" key={service.title}>
+                  <span className="card-number">{String(index + 1).padStart(2, '0')}</span>
+                  <h3>{service.title}</h3>
+                  <p>{service.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              {/* Footer */}
-              <footer>
-                <div className="container">
-                  <div className="footer-content">
-                    <a href="#" className="logo">PY<span>DEV</span></a>
-                    <p>Building the future, one line of code at a time.</p>
-                    <div className="social-links">
-                      <a href="https://github.com/Dhrumin245" className="social-link"><i className="fab fa-github"></i></a>
-                      <a href="https://www.linkedin.com/in/dhrumin-gogari-74b52025a/" className="social-link"><i className="fab fa-linkedin-in"></i></a>
-                      <a href="https://www.instagram.com/dhrumin_2684?igsh=ejJ0NTMwbWM1dmY4" className="social-link"><i className="fab fa-instagram"></i></a>
-                      <a href="#" className="social-link"><i className="fab fa-stack-overflow"></i></a>
-                    </div>
+        <section className="section projects" id="work">
+          <div className="container">
+            <div className="section-title reveal">
+              <span className="section-kicker">Selected Work</span>
+              <h2>Websites, APIs, and web apps that feel fast from day one.</h2>
+            </div>
+            <div className="projects-grid">
+              {projects.map((project, index) => (
+                <Link
+                  className={`project-card reveal ${index === 0 ? 'featured-project' : ''}`}
+                  key={project.title}
+                  to={`/projects/${project.slug}`}
+                >
+                  <div className="project-visual">
+                    <span>{project.category}</span>
+                    <div className="visual-grid"></div>
                   </div>
-                  <p className="copyright">© 2025 Data Scientist. All rights reserved.</p>
-                </div>
-              </footer>
-            </>
-          }
-        />
-        <Route path="/project/:id" element={<ProjectDetails />} />
-        <Route path="/skills" element={<SkillsPage />} />
-      </Routes>
+                  <div className="project-details">
+                    <div className="project-tags">
+                      {project.stack.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                    <h3>{project.title}</h3>
+                    <p>{project.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section why-section" id="why-us">
+          <div className="container why-grid">
+            <div className="why-copy reveal">
+              <span className="section-kicker">Why Dhrumin's Tech world</span>
+              <h2>The smartest way to build is not fully manual or fully automated.</h2>
+              <p>
+                We combine machine speed with human ownership, so you get momentum without
+                accepting risky code, unclear UX, or fragile architecture.
+              </p>
+              <a href="#contact" className="text-link">
+                Talk to the builders
+              </a>
+            </div>
+            <div className="reason-list">
+              {reasons.map((reason) => (
+                <article className="reason-card reveal" key={reason.title}>
+                  <h3>{reason.title}</h3>
+                  <p>{reason.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="process">
+          <div className="container">
+            <div className="section-title centered reveal">
+              <span className="section-kicker">The Pipeline</span>
+              <h2>From idea to production without the usual drag.</h2>
+              <p>A practical workflow that makes AI useful and keeps humans accountable.</p>
+            </div>
+            <div className="process-timeline">
+              {processSteps.map((step, index) => (
+                <article className="timeline-item reveal" key={step.title}>
+                  <div className="timeline-dot">{String(index + 1).padStart(2, '0')}</div>
+                  <div className="timeline-content">
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                    <span>{step.badge}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section cta-section reveal">
+          <div className="container">
+            <div className="cta-banner">
+              <span className="section-kicker">AI precision. Human polish.</span>
+              <h2>Bring the idea. We will bring the engine.</h2>
+              <p>
+                Whether you need a sharper company website, a reliable API, or a full web app,
+                Dhrumin's Tech world turns rough requirements into reviewed, launch-ready software.
+              </p>
+              <a href="#contact" className="btn btn-primary">
+                Get A Build Plan
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="section contact-section" id="contact">
+          <div className="container contact-grid">
+            <div className="contact-copy reveal">
+              <span className="section-kicker">Start The Build</span>
+              <h2>Tell us what you want to launch.</h2>
+              <p>
+                Send the goal, timeline, and any systems we need to connect. We will respond
+                with a practical build path for your website, API, or web app.
+              </p>
+              <div className="contact-points">
+                <span>Websites</span>
+                <span>APIs</span>
+                <span>Web Apps</span>
+                <span>AI Automation</span>
+              </div>
+            </div>
+
+            <form className="contact-form reveal" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  className="form-control"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="email">Business Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  className="form-control"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="message">Project Brief</label>
+                <textarea
+                  id="message"
+                  className="form-control"
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="What are you building, and what should it do?"
+                ></textarea>
+              </div>
+              <button type="submit" className="submit-btn">
+                Send Project Brief
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div className="container footer-grid">
+          <div>
+            <Link to="/" className="logo">
+              Dhrumin's <span>Tech world</span>
+            </Link>
+            <p>Software built by AI, perfected by humans.</p>
+          </div>
+          <div className="footer-links">
+            {navItems.map((item) => (
+              <a href={item.href} key={item.href}>
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+        <p className="copyright">(c) 2026 Dhrumin's Tech world. Built fast. Reviewed carefully.</p>
+      </footer>
     </>
+  );
+}
+
+function ProjectComingSoon() {
+  const { slug } = useParams();
+  const project = projects.find((item) => item.slug === slug);
+  const title = project?.title ?? 'Project';
+
+  useEffect(() => {
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    const navLinksItems = document.querySelectorAll('.nav-links li');
+    const header = document.getElementById('header');
+
+    const handleMenuToggle = () => {
+      navLinks.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    };
+
+    const handleMenuClose = () => {
+      navLinks.classList.remove('active');
+      hamburger.classList.remove('active');
+    };
+
+    const handleScroll = () => {
+      header.classList.toggle('scrolled', window.scrollY > 80);
+    };
+
+    hamburger.addEventListener('click', handleMenuToggle);
+    navLinksItems.forEach((item) => item.addEventListener('click', handleMenuClose));
+    window.addEventListener('scroll', handleScroll);
+
+    gsap.from('.coming-soon-panel > *', {
+      duration: 0.8,
+      y: 24,
+      opacity: 0,
+      stagger: 0.1,
+      ease: 'power3.out',
+    });
+
+    gsap.to('.shape-1', {
+      duration: 20,
+      x: 160,
+      y: 120,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+
+    gsap.to('.shape-2', {
+      duration: 24,
+      x: -140,
+      y: -170,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+
+    gsap.to('.shape-3', {
+      duration: 18,
+      x: 100,
+      y: -90,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const particleCount = window.innerWidth < 768 ? 45 : 90;
+    let animationFrameId;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 1;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.speedY = Math.random() * 0.8 - 0.4;
+        this.color = `rgba(${Math.floor(Math.random() * 40 + 180)}, ${Math.floor(
+          Math.random() * 90 + 40
+        )}, 255, ${Math.random() * 0.45 + 0.12})`;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width) this.speedX = -this.speedX;
+        if (this.y < 0 || this.y > canvas.height) this.speedY = -this.speedY;
+      }
+
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+        for (let j = i; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 105) {
+            ctx.strokeStyle = `rgba(0, 212, 255, ${1 - distance / 105})`;
+            ctx.lineWidth = 0.45;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animateParticles);
+    }
+
+    const handleCanvasResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleCanvasResize);
+    initParticles();
+    animateParticles();
+
+    return () => {
+      hamburger.removeEventListener('click', handleMenuToggle);
+      navLinksItems.forEach((item) => item.removeEventListener('click', handleMenuClose));
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleCanvasResize);
+      cancelAnimationFrame(animationFrameId);
+      gsap.killTweensOf(['.shape-1', '.shape-2', '.shape-3', '.coming-soon-panel > *']);
+    };
+  }, []);
+
+  return (
+    <>
+      <SplashCursor />
+      <div className="bg-shapes">
+        <div className="shape shape-1"></div>
+        <div className="shape shape-2"></div>
+        <div className="shape shape-3"></div>
+      </div>
+      <canvas id="particle-canvas"></canvas>
+
+      <header id="header">
+        <div className="container">
+          <nav>
+            <Link to="/" className="logo">
+              Dhrumin's <span>Tech world</span>
+            </Link>
+            <ul className="nav-links">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link to={`/${item.href}`}>{item.label}</Link>
+                </li>
+              ))}
+            </ul>
+            <Link to="/#contact" className="nav-cta">
+              Start a Project
+            </Link>
+            <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section className="coming-soon-page">
+          <div className="container">
+            <div className="coming-soon-panel">
+              <span className="section-kicker">{title}</span>
+              <h1>Project coming soon</h1>
+              <p>This project page is being prepared. The full case study will be added here.</p>
+              <Link to="/#work" className="btn btn-secondary">
+                Back To Work
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/projects/:slug" element={<ProjectComingSoon />} />
+    </Routes>
   );
 }
 
