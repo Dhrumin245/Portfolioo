@@ -92,7 +92,7 @@ function CardSection({ kicker, title, body, items = [], band = false }) {
               <article className="case-card" key={item.title || item.label || item}>
                 {item.label ? <span>{item.label}</span> : null}
                 {item.image ? <img src={item.image} alt="" /> : null}
-                <h3>{item.title || item}</h3>
+                <h3>{item.title || item.label || 'Untitled item'}</h3>
                 {item.body || item.description ? <p>{item.body || item.description}</p> : null}
               </article>
             ))}

@@ -52,7 +52,7 @@ const newBlock = (type) => {
     problem: { title: 'Problem', body: '', items: [] },
     objectives: { title: 'Objectives', body: '', items: [] },
     solution: { title: 'Solution', body: '', points: [] },
-    feature_grid: { title: 'Features', features: [] },
+    feature_grid: { title: 'Features', features: [], items: [] },
     gallery: { title: 'Gallery', images: [] },
     architecture: { title: 'Architecture', body: '', items: [] },
     impact: { title: 'Impact', results: [] },
@@ -618,9 +618,9 @@ function BlockFields({ block, index, updateBlock, updateBlockData, uploadImage }
         <Input label="Heading" value={data.title} onChange={(value) => updateBlock(index, { title: value })} />
         <Repeater
           label="Features"
-          items={data.features || []}
+          items={data.features || data.items || []}
           fields={['label', 'title', 'body']}
-          onChange={(features) => updateBlock(index, { features })}
+          onChange={(features) => updateBlock(index, { features, items: features })}
           uploadImage={uploadImage}
         />
       </div>
