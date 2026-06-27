@@ -4,6 +4,8 @@ import './assets/css/style.css';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from './components/animations/Animations/SplashCursor/SplashCursor';
+import ProjectDetails from './pages/ProjectDetails';
+import AdminProjects from './pages/AdminProjects';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -132,6 +134,7 @@ function HomePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [portfolioProjects, setPortfolioProjects] = useState(projects);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -157,6 +160,24 @@ function HomePage() {
       alert('Something went wrong!');
     }
   };
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/projects?status=published');
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setPortfolioProjects(data);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   useEffect(() => {
     const hamburger = document.querySelector('.hamburger');
@@ -464,19 +485,25 @@ function HomePage() {
               <h2>Websites, APIs, and web apps that feel fast from day one.</h2>
             </div>
             <div className="projects-grid">
-              {projects.map((project, index) => (
+              {portfolioProjects.map((project, index) => {
+                const stack = project.stack?.length ? project.stack : project.tags ?? [];
+
+                return (
                 <Link
                   className={`project-card reveal ${index === 0 ? 'featured-project' : ''}`}
                   key={project.title}
                   to={`/projects/${project.slug}`}
                 >
                   <div className="project-visual">
-                    <span>{project.category}</span>
+                    <span>{project.category || 'Case Study'}</span>
+                    {project.coverImage || project.image ? (
+                      <img src={project.coverImage || project.image} alt="" />
+                    ) : null}
                     <div className="visual-grid"></div>
                   </div>
                   <div className="project-details">
                     <div className="project-tags">
-                      {project.stack.map((tag) => (
+                      {stack.map((tag) => (
                         <span key={tag}>{tag}</span>
                       ))}
                     </div>
@@ -484,7 +511,8 @@ function HomePage() {
                     <p>{project.description}</p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -836,7 +864,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/projects/:slug" element={<ProjectComingSoon />} />
+      <Route path="/projects/:slug" element={<ProjectDetails />} />
+      <Route path="/admin/projects" element={<AdminProjects />} />
     </Routes>
   );
 }
