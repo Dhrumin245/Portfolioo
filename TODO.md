@@ -1,9 +1,14 @@
-# TODO: Implement PDF Upload to MongoDB GridFS and Download from Frontend
+# TODO - Protect Admin Panel
 
-## Steps from Approved Plan
+- [x] Implement admin authorization middleware on backend (use API key from env)
+- [x] Apply middleware to all admin/write routes in `Backend/routes/projectRoutes.js`
 
-- [x] Backend/server.js: Mount resumeRoutes with app.use('/api/resume', resumeRoutes);
-- [x] Backend/routes/resumeRoutes.js: Update GET route to use GridFS for downloading
-- [x] my-app/src/App.jsx: Attach onClick to the Download Resume button
-- [ ] Upload PDF to MongoDB Compass using GridFS with filename 'resume.pdf'
-- [ ] Test the download functionality
+- [x] Apply middleware to image upload + restore + delete + create/update
+
+- [x] Update frontend `my-app/src/pages/AdminProjects.jsx` to send the API key header
+
+- [x] Add env var documentation (what to set in hosting)
+
+- [x] Run backend lint/start sanity checks
+
+
