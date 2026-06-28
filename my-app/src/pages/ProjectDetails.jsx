@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from '../components/animations/Animations/SplashCursor/SplashCursor';
 import { CaseStudyPreview } from '../components/CaseStudyBlocks';
+import Footer from '../components/Footer';
 import '../assets/css/style.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -91,24 +92,7 @@ function PageShell({ children }) {
 
       {children}
 
-      <footer>
-        <div className="container footer-grid">
-          <div>
-            <Link to="/" className="logo">
-              Dhrumin's <span>Tech world</span>
-            </Link>
-            <p>Software built by AI, perfected by humans.</p>
-          </div>
-          <div className="footer-links">
-            {navItems.map((item) => (
-              <Link to={item.href} key={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <p className="copyright">(c) 2026 Dhrumin's Tech world. Built fast. Reviewed carefully.</p>
-      </footer>
+      <Footer />
     </>
   );
 }

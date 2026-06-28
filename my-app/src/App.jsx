@@ -6,6 +6,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from './components/animations/Animations/SplashCursor/SplashCursor';
 import ProjectDetails from './pages/ProjectDetails';
 import AdminProjects from './pages/AdminProjects';
+import Footer from './components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -621,24 +622,7 @@ function HomePage() {
         </section>
       </main>
 
-      <footer>
-        <div className="container footer-grid">
-          <div>
-            <Link to="/" className="logo">
-              Dhrumin's <span>Tech world</span>
-            </Link>
-            <p>Software built by AI, perfected by humans.</p>
-          </div>
-          <div className="footer-links">
-            {navItems.map((item) => (
-              <a href={item.href} key={item.href}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </div>
-        <p className="copyright">(c) 2026 Dhrumin's Tech world. Built fast. Reviewed carefully.</p>
-      </footer>
+      <Footer />
     </>
   );
 }
