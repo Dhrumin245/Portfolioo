@@ -52,28 +52,11 @@ const services = [
 
 const projects = [
   {
-    title: 'AstraOps Client Portal',
-    slug: 'astraops-client-portal',
-    category: 'Web App',
-    description:
-      'A self-serve client workspace for requests, approvals, files, and project updates. AI drafted the workflows; engineers hardened auth, roles, and edge cases.',
-    stack: ['React', 'Node', 'Postgres'],
-  },
-  {
-    title: 'PulseAPI Integration Layer',
-    slug: 'pulseapi-integration-layer',
-    category: 'API',
-    description:
-      'A secure API layer connecting CRM, billing, analytics, and support data into one operational source of truth.',
-    stack: ['REST', 'Auth', 'Webhooks'],
-  },
-  {
-    title: 'LaunchGrid Marketing Site',
-    slug: 'launchgrid-marketing-site',
-    category: 'Website',
-    description:
-      'A fast conversion site with service pages, lead forms, analytics events, and AI-assisted content reviewed for clarity.',
-    stack: ['Vite', 'SEO', 'Analytics'],
+    title: 'Project coming soon',
+    slug: 'coming-soon',
+    category: 'Upcoming',
+    description: 'Project coming soon',
+    stack: [],
   },
 ];
 
