@@ -4,7 +4,7 @@ services:
     name: portfolioo
     runtime: node
     plan: free
-    buildCommand: npm install && cd Backend && npm install && cd ../my-app && npm install && npm run build
+    buildCommand: npm install && npm run build
     startCommand: node Backend/server.js
     envVars:
       - key: NODE_ENV

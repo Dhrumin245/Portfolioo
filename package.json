@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix my-app\" \"npm run server --prefix Backend\"",
-    "build": "npm run build --prefix my-app",
+    "build": "npm install --prefix Backend && npm install --prefix my-app && npm run build --prefix my-app",
     "start": "npm run start --prefix Backend",
     "test": "npm run test --prefix Backend && npm run test --prefix my-app"
   },
