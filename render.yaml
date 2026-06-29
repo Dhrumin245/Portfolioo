@@ -1,0 +1,15 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: portfolioo
+    runtime: node
+    plan: free
+    buildCommand: npm install && cd Backend && npm install && cd ../my-app && npm install && npm run build
+    startCommand: node Backend/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false          # set manually in Render dashboard
+      - key: ADMIN_API_KEY
+        sync: false          # set manually in Render dashboard
