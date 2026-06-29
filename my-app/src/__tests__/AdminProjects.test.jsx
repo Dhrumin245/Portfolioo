@@ -6,7 +6,7 @@ import AdminProjects from '../pages/AdminProjects';
 describe('AdminProjects page component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
     import.meta.env.VITE_ADMIN_API_KEY = 'test-key';
   });
 
@@ -15,7 +15,7 @@ describe('AdminProjects page component', () => {
       { id: '1', title: 'Admin App', slug: 'admin-app', status: 'published', category: 'Web App' },
     ];
 
-    global.fetch.mockResolvedValueOnce({
+    globalThis.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockProjects,
     });

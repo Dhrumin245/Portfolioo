@@ -10,7 +10,7 @@ vi.mock('../components/animations/Animations/SplashCursor/SplashCursor', () => (
 describe('ProjectDetails component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
   });
 
   it('renders loading state initially and then project details when fetch succeeds', async () => {
@@ -21,7 +21,7 @@ describe('ProjectDetails component', () => {
       blocks: [],
     };
 
-    global.fetch.mockResolvedValueOnce({
+    globalThis.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockProject,
     });
@@ -42,7 +42,7 @@ describe('ProjectDetails component', () => {
   });
 
   it('renders coming soon message when project is not found', async () => {
-    global.fetch.mockResolvedValueOnce({
+    globalThis.fetch.mockResolvedValueOnce({
       ok: false,
     });
 
