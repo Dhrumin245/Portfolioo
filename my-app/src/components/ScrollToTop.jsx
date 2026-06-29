@@ -1,0 +1,30 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
+
+export default function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      const timer = setTimeout(() => {
+        const id = hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          window.scrollTo({
+            top: element.offsetTop - 80,
+            behavior: 'smooth',
+          });
+        } else {
+          window.scrollTo(0, 0);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+
+  return null;
+}

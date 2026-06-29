@@ -367,15 +367,18 @@ nav {
     opacity: 0;
     background: conic-gradient(
         from var(--border-angle),
-        transparent 0 18%,
+        transparent 0% 18%,
         rgba(0, 212, 255, 0.95) 24%,
         rgba(36, 209, 143, 0.95) 34%,
         rgba(255, 123, 0, 0.72) 42%,
         transparent 52% 100%
     );
     -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+        linear-gradient(#000 0% 0%) content-box,
+        linear-gradient(#000 0% 0%);
+    mask:
+        linear-gradient(#000 0% 0%) content-box,
+        linear-gradient(#000 0% 0%);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     animation: border-spin 2.8s linear infinite;
@@ -1033,7 +1036,7 @@ textarea.form-control {
 
 .footer-cols {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
     margin-bottom: 50px;
 }
@@ -1068,12 +1071,18 @@ textarea.form-control {
     gap: 12px;
 }
 
-.footer-col ul li a {
+.footer-col ul li a,
+.footer-static-item {
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.88rem;
     font-weight: 600;
     transition: all 0.25s ease;
+}
+
+.footer-static-item {
+    cursor: default;
+    user-select: none;
 }
 
 .footer-col ul li a:hover {
@@ -1083,10 +1092,7 @@ textarea.form-control {
 }
 
 .footer-bottom-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 50px;
-    align-items: stretch;
+    display: flex;
     margin-bottom: 50px;
 }
 
