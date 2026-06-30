@@ -17,13 +17,24 @@ const __dirname = path.dirname(__filename);
 // CORS — allow the Vercel frontend (and localhost for dev)
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-  : ['http://localhost:5173'];
+  : [];
 
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow server-to-server requests (no origin) and allowed origins
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow server-to-server requests (no origin)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Check if it's in allowedOrigins, is a Vercel deployment, or is localhost
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin ${origin} not allowed`));
