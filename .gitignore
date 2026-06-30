@@ -15,9 +15,6 @@ build/
 Backend/.env
 my-app/.env
 
-# Local User Uploads (dynamic runtime assets)
-Backend/uploads/
-
 # Logs
 *.log
 *.err
