@@ -6,7 +6,7 @@ import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from './components/animations/Animations/SplashCursor/SplashCursor';
 import ProjectDetails from './pages/ProjectDetails';
-import AdminProjects from './pages/AdminProjects';
+// import AdminProjects from './pages/AdminProjects';
 import Footer from './components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -833,7 +833,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/projects/:slug" element={<ProjectDetails />} />
-      <Route path="/admin/projects" element={<AdminProjects />} />
+      {/* <Route path="/admin/projects" element={<AdminProjects />} /> */}
     </Routes>
   );
 }

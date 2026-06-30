@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/uploads/:path*", "destination": "https://portfolioo-production-4c7f.up.railway.app/uploads/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
