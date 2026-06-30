@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from '../utils/api';
 import { Link, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
@@ -105,7 +106,7 @@ function ProjectDetails() {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const res = await fetch(`/api/projects/${slug}`);
+        const res = await fetch(apiUrl(`/api/projects/${slug}`));
         if (!res.ok) return;
 
         const data = await res.json();

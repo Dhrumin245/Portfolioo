@@ -6,15 +6,9 @@ on:
   pull_request:
     branches: [ main, master ]
 
-# Grant permissions required for GitHub Pages deployment
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Allow only one concurrent deployment
 concurrency:
-  group: "pages"
+  group: "deploy"
   cancel-in-progress: false
 
 jobs:
@@ -53,60 +47,51 @@ jobs:
       - name: Run Frontend Tests
         run: npm run test --prefix my-app
 
-  build:
-    name: Build Frontend
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: |
-          npm ci
-          npm ci --prefix my-app
-
-      - name: Build Frontend (Vite)
-        run: npm run build --prefix my-app
-
-      - name: Upload GitHub Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './my-app/dist'
-
-  deploy-github-pages:
-    name: Deploy to GitHub Pages
-    needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  deploy-render:
-    name: Deploy to Render
+  deploy-vercel:
+    name: Deploy Frontend to Vercel
     needs: lint-and-test
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render Deploy Hook
+      - name: Trigger Vercel Deploy Hook
         run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "::warning::RENDER_DEPLOY_HOOK_URL secret is not set — skipping deployment."
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK_URL secret is not set — skipping deployment."
             exit 0
           fi
-          curl -s -o /dev/null -w "%{http_code}" "$RENDER_DEPLOY_HOOK_URL" | grep -q "200" \
-            && echo "✅ Render deploy triggered successfully" \
-            || (echo "❌ Failed to trigger Render deploy" && exit 1)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$VERCEL_DEPLOY_HOOK_URL")
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Vercel deploy triggered successfully (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Failed to trigger Vercel deploy (HTTP $HTTP_CODE)"
+            exit 1
+          fi
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+
+  deploy-koyeb:
+    name: Deploy Backend to Koyeb
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Koyeb Redeploy
+        run: |
+          if [ -z "$KOYEB_API_TOKEN" ] || [ -z "$KOYEB_APP_ID" ] || [ -z "$KOYEB_SERVICE_ID" ]; then
+            echo "::warning::Koyeb secrets not set — skipping deployment."
+            exit 0
+          fi
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "https://app.koyeb.com/v1/services/${KOYEB_SERVICE_ID}/redeploy" \
+            -H "Authorization: Bearer ${KOYEB_API_TOKEN}" \
+            -H "Content-Type: application/json")
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Koyeb redeploy triggered successfully (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Failed to trigger Koyeb redeploy (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+        env:
+          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
+          KOYEB_APP_ID: ${{ secrets.KOYEB_APP_ID }}
+          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}

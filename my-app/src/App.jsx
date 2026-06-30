@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from './utils/api';
 import { Link, Route, Routes, useParams } from 'react-router-dom';
 import './assets/css/style.css';
 import gsap from 'gsap';
@@ -123,7 +124,7 @@ function HomePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(apiUrl('/api/contact'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ function HomePage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch('/api/projects?status=published');
+        const res = await fetch(apiUrl('/api/projects?status=published'));
         if (!res.ok) return;
 
         const data = await res.json();

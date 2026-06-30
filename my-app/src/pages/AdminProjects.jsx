@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { apiUrl } from '../utils/api';
 import { Link } from 'react-router-dom';
 import { CaseStudyPreview } from '../components/CaseStudyBlocks';
 import '../assets/css/style.css';
@@ -119,7 +120,7 @@ function AdminProjects() {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
+      const res = await fetch(apiUrl('/api/projects'));
       if (!res.ok) throw new Error('Failed to load projects');
       const data = await res.json();
       setProjects(Array.isArray(data) ? data : []);
@@ -171,7 +172,7 @@ function AdminProjects() {
       reader.readAsDataURL(file);
     });
 
-    const res = await fetch('/api/projects/upload-image', {
+    const res = await fetch(apiUrl('/api/projects/upload-image'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -261,7 +262,7 @@ function AdminProjects() {
     }
 
     try {
-      const res = await fetch(editingSlug ? `/api/projects/${editingSlug}` : '/api/projects', {
+      const res = await fetch(apiUrl(editingSlug ? `/api/projects/${editingSlug}` : '/api/projects'), {
         method: editingSlug ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -296,7 +297,7 @@ function AdminProjects() {
     if (!editingSlug) return;
 
     try {
-      const res = await fetch(`/api/projects/${editingSlug}/restore/${index}`, {
+      const res = await fetch(apiUrl(`/api/projects/${editingSlug}/restore/${index}`), {
         method: 'POST',
         headers: {
           ...authHeaders(),
@@ -322,7 +323,7 @@ function AdminProjects() {
     if (!window.confirm(`Delete ${item.title}?`)) return;
 
     try {
-      const res = await fetch(`/api/projects/${item.slug}`, {
+      const res = await fetch(apiUrl(`/api/projects/${item.slug}`), {
         method: 'DELETE',
         headers: {
           ...authHeaders(),

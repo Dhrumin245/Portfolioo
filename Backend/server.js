@@ -2,7 +2,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import contactRoutes from './routes/contactRoutes.js';
@@ -14,35 +13,33 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const clientDistPath = path.resolve(__dirname, '../my-app/dist');
 
-// Middleware
-app.use(cors());
+// CORS — allow the Vercel frontend (and localhost for dev)
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : ['http://localhost:5173'];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow server-to-server requests (no origin) and allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: '15mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-if (fs.existsSync(clientDistPath)) {
-  app.use(express.static(clientDistPath));
-}
 
 // Routes
 app.use('/api/contact', contactRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/resume', resumeRoutes);
-
-if (fs.existsSync(clientDistPath)) {
-  app.use((req, res, next) => {
-    if (req.method !== 'GET') {
-      return next();
-    }
-
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-      return next();
-    }
-
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
-}
 
 
 // MongoDB Connection
