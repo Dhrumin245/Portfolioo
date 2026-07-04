@@ -8,6 +8,7 @@ import SplashCursor from './components/animations/Animations/SplashCursor/Splash
 import ProjectDetails from './pages/ProjectDetails';
 // import AdminProjects from './pages/AdminProjects';
 import Footer from './components/Footer';
+import ThemeToggle from './components/ThemeToggle';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -114,6 +115,12 @@ const benefits = [
   { value: '0', label: 'blind AI handoffs' },
   { value: '24h', label: 'response on new briefs' },
 ];
+
+const isLightTheme = () => document.documentElement.dataset.theme === 'light';
+const getParticleColor = (alpha) =>
+  isLightTheme() ? `rgba(28, 110, 196, ${alpha})` : `rgba(0, 212, 255, ${alpha})`;
+const getParticleLineColor = (alpha) =>
+  isLightTheme() ? `rgba(72, 91, 190, ${alpha * 0.72})` : `rgba(0, 212, 255, ${alpha})`;
 
 function HomePage() {
   const [name, setName] = useState('');
@@ -275,9 +282,7 @@ function HomePage() {
         this.size = Math.random() * 2.5 + 1;
         this.speedX = Math.random() * 0.8 - 0.4;
         this.speedY = Math.random() * 0.8 - 0.4;
-        this.color = `rgba(${Math.floor(Math.random() * 40 + 180)}, ${Math.floor(
-          Math.random() * 90 + 40
-        )}, 255, ${Math.random() * 0.45 + 0.12})`;
+        this.alpha = Math.random() * 0.45 + 0.12;
       }
 
       update() {
@@ -288,7 +293,7 @@ function HomePage() {
       }
 
       draw() {
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = getParticleColor(this.alpha);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -311,7 +316,7 @@ function HomePage() {
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           if (distance < 105) {
-            ctx.strokeStyle = `rgba(0, 212, 255, ${1 - distance / 105})`;
+            ctx.strokeStyle = getParticleLineColor(1 - distance / 105);
             ctx.lineWidth = 0.45;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -366,9 +371,12 @@ function HomePage() {
                 </li>
               ))}
             </ul>
-            <a href="#contact" className="nav-cta">
-              Start a Project
-            </a>
+            <div className="nav-actions">
+              <a href="#contact" className="nav-cta">
+                Start a Project
+              </a>
+              <ThemeToggle />
+            </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>
               <div></div>
@@ -708,9 +716,7 @@ function ProjectComingSoon() {
         this.size = Math.random() * 2.5 + 1;
         this.speedX = Math.random() * 0.8 - 0.4;
         this.speedY = Math.random() * 0.8 - 0.4;
-        this.color = `rgba(${Math.floor(Math.random() * 40 + 180)}, ${Math.floor(
-          Math.random() * 90 + 40
-        )}, 255, ${Math.random() * 0.45 + 0.12})`;
+        this.alpha = Math.random() * 0.45 + 0.12;
       }
 
       update() {
@@ -721,7 +727,7 @@ function ProjectComingSoon() {
       }
 
       draw() {
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = getParticleColor(this.alpha);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -744,7 +750,7 @@ function ProjectComingSoon() {
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           if (distance < 105) {
-            ctx.strokeStyle = `rgba(0, 212, 255, ${1 - distance / 105})`;
+            ctx.strokeStyle = getParticleLineColor(1 - distance / 105);
             ctx.lineWidth = 0.45;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -798,9 +804,12 @@ function ProjectComingSoon() {
                 </li>
               ))}
             </ul>
-            <Link to="/#contact" className="nav-cta">
-              Start a Project
-            </Link>
+            <div className="nav-actions">
+              <Link to="/#contact" className="nav-cta">
+                Start a Project
+              </Link>
+              <ThemeToggle />
+            </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>
               <div></div>

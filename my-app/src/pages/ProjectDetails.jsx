@@ -6,6 +6,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import SplashCursor from '../components/animations/Animations/SplashCursor/SplashCursor';
 import { CaseStudyPreview } from '../components/CaseStudyBlocks';
 import Footer from '../components/Footer';
+import ThemeToggle from '../components/ThemeToggle';
 import '../assets/css/style.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -79,9 +80,12 @@ function PageShell({ children }) {
                 </li>
               ))}
             </ul>
-            <Link to="/admin/projects" className="nav-cta">
-              Admin
-            </Link>
+            <div className="nav-actions">
+              <Link to="/admin/projects" className="nav-cta">
+                Admin
+              </Link>
+              <ThemeToggle />
+            </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>
               <div></div>

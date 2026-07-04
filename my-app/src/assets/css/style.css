@@ -11,6 +11,37 @@
     --light: #f7fbff;
     --text: rgba(255, 255, 255, 0.92);
     --text-secondary: rgba(224, 234, 255, 0.68);
+    --page-bg: #070912;
+    --page-gradient:
+        linear-gradient(135deg, rgba(0, 212, 255, 0.08), transparent 28%),
+        linear-gradient(315deg, rgba(255, 123, 0, 0.08), transparent 28%),
+        #070912;
+    --header-bg: rgba(7, 9, 18, 0.72);
+    --header-scrolled-bg: rgba(3, 5, 11, 0.94);
+    --mobile-nav-bg: rgba(3, 5, 11, 0.98);
+}
+
+:root[data-theme='light'] {
+    --primary: #5a48d8;
+    --secondary: #007ccf;
+    --accent: #f05a28;
+    --green: #008f68;
+    --dark: #f5f8ff;
+    --darker: #ffffff;
+    --panel: rgba(255, 255, 255, 0.72);
+    --panel-strong: rgba(255, 255, 255, 0.88);
+    --border: rgba(17, 31, 61, 0.14);
+    --light: #101827;
+    --text: rgba(13, 23, 42, 0.92);
+    --text-secondary: rgba(42, 55, 84, 0.72);
+    --page-bg: #f5f8ff;
+    --page-gradient:
+        linear-gradient(135deg, rgba(0, 124, 207, 0.14), transparent 30%),
+        linear-gradient(315deg, rgba(240, 90, 40, 0.12), transparent 30%),
+        #f5f8ff;
+    --header-bg: rgba(255, 255, 255, 0.78);
+    --header-scrolled-bg: rgba(255, 255, 255, 0.94);
+    --mobile-nav-bg: rgba(255, 255, 255, 0.98);
 }
 
 @property --border-angle {
@@ -31,10 +62,11 @@ html {
 
 body {
     font-family: 'Rajdhani', sans-serif;
-    background: var(--dark);
+    background: var(--page-bg);
     color: var(--text);
     overflow-x: hidden;
     line-height: 1.6;
+    transition: background 0.25s ease, color 0.25s ease;
 }
 
 body::before {
@@ -42,10 +74,8 @@ body::before {
     position: fixed;
     inset: 0;
     z-index: -3;
-    background:
-        linear-gradient(135deg, rgba(0, 212, 255, 0.08), transparent 28%),
-        linear-gradient(315deg, rgba(255, 123, 0, 0.08), transparent 28%),
-        #070912;
+    background: var(--page-gradient);
+    transition: background 0.25s ease;
 }
 
 h1,
@@ -78,13 +108,13 @@ header {
     padding: 18px 0;
     transition: all 0.25s ease;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(7, 9, 18, 0.72);
+    background: var(--header-bg);
     backdrop-filter: blur(14px);
 }
 
 header.scrolled {
     padding: 12px 0;
-    background: rgba(3, 5, 11, 0.94);
+    background: var(--header-scrolled-bg);
 }
 
 nav {
@@ -92,6 +122,12 @@ nav {
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+}
+
+.nav-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .logo {
@@ -151,6 +187,86 @@ nav {
     color: var(--darker);
     background: var(--secondary);
     box-shadow: 0 0 28px rgba(0, 212, 255, 0.24);
+}
+
+.theme-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--light);
+    background: var(--panel);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 212, 255, 0.5);
+    background: var(--panel-strong);
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.16);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--secondary);
+    outline-offset: 4px;
+}
+
+.theme-toggle-icon {
+    position: relative;
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle-sun,
+.theme-toggle-moon {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle-sun {
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(255, 123, 0, 0.16), 0 0 18px rgba(255, 123, 0, 0.32);
+    opacity: 0;
+    transform: scale(0.65) rotate(-30deg);
+}
+
+.theme-toggle-sun::before,
+.theme-toggle-sun::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 28px;
+    border-radius: 99px;
+    background: var(--accent);
+    transform: translate(-50%, -50%);
+}
+
+.theme-toggle-sun::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.theme-toggle-moon {
+    background: var(--secondary);
+    box-shadow: inset -6px 0 0 var(--dark), 0 0 16px rgba(0, 212, 255, 0.36);
+}
+
+:root[data-theme='light'] .theme-toggle-sun {
+    opacity: 1;
+    transform: scale(0.72) rotate(0deg);
+}
+
+:root[data-theme='light'] .theme-toggle-moon {
+    opacity: 0;
+    transform: translateX(8px) scale(0.55);
 }
 
 .hamburger {
@@ -1989,6 +2105,145 @@ textarea.form-control {
     font-size: clamp(2.3rem, 7vw, 4rem);
 }
 
+:root[data-theme='light'] header {
+    border-bottom-color: rgba(17, 31, 61, 0.1);
+    box-shadow: 0 10px 32px rgba(17, 31, 61, 0.08);
+}
+
+:root[data-theme='light'] .shape {
+    opacity: 0.18;
+    filter: blur(70px);
+}
+
+:root[data-theme='light'] .shape-1 {
+    background: #62b6ff;
+}
+
+:root[data-theme='light'] .shape-2 {
+    background: #8ee8cf;
+}
+
+:root[data-theme='light'] .shape-3 {
+    background: #ffb36b;
+}
+
+:root[data-theme='light'] .hero h1 span {
+    -webkit-text-stroke-color: rgba(16, 24, 39, 0.38);
+}
+
+:root[data-theme='light'] .btn-primary,
+:root[data-theme='light'] .submit-btn,
+:root[data-theme='light'] .nav-cta:hover,
+:root[data-theme='light'] .newsletter-btn {
+    color: #ffffff;
+}
+
+:root[data-theme='light'] .btn-secondary,
+:root[data-theme='light'] .contact-points span,
+:root[data-theme='light'] .project-tags span,
+:root[data-theme='light'] .chip,
+:root[data-theme='light'] .admin-item-actions button,
+:root[data-theme='light'] .cms-sidebar button,
+:root[data-theme='light'] .cms-project-actions button,
+:root[data-theme='light'] .cms-project-actions a,
+:root[data-theme='light'] .block-editor-header button,
+:root[data-theme='light'] .repeater-header button,
+:root[data-theme='light'] .repeater-item > button,
+:root[data-theme='light'] .gallery-admin-item button,
+:root[data-theme='light'] .add-section-control button,
+:root[data-theme='light'] .version-list button {
+    background: rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme='light'] .hero-console,
+:root[data-theme='light'] .admin-panel,
+:root[data-theme='light'] .admin-list,
+:root[data-theme='light'] .cms-sidebar,
+:root[data-theme='light'] .cms-panel,
+:root[data-theme='light'] .cms-preview,
+:root[data-theme='light'] .coming-soon-panel {
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 24px 80px rgba(17, 31, 61, 0.12);
+}
+
+:root[data-theme='light'] .intro-band,
+:root[data-theme='light'] .projects,
+:root[data-theme='light'] .case-band {
+    background: rgba(255, 255, 255, 0.54);
+}
+
+:root[data-theme='light'] .stats-bar,
+:root[data-theme='light'] .service-card,
+:root[data-theme='light'] .project-card,
+:root[data-theme='light'] .reason-card,
+:root[data-theme='light'] .case-stat,
+:root[data-theme='light'] .case-impact,
+:root[data-theme='light'] .case-card,
+:root[data-theme='light'] .case-meta-panel div {
+    background: rgba(255, 255, 255, 0.84);
+}
+
+:root[data-theme='light'] .timeline-dot {
+    background: #ffffff;
+}
+
+:root[data-theme='light'] .timeline-content,
+:root[data-theme='light'] .contact-form,
+:root[data-theme='light'] .case-hero-image,
+:root[data-theme='light'] .case-gallery figure,
+:root[data-theme='light'] .case-quote,
+:root[data-theme='light'] .cms-project-card,
+:root[data-theme='light'] .image-preview,
+:root[data-theme='light'] .block-editor,
+:root[data-theme='light'] .repeater-item,
+:root[data-theme='light'] .project-visual {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme='light'] .service-card:hover,
+:root[data-theme='light'] .project-card:hover,
+:root[data-theme='light'] .project-card:focus-visible,
+:root[data-theme='light'] .reason-card:hover,
+:root[data-theme='light'] .timeline-content:hover,
+:root[data-theme='light'] .console-line:hover {
+    background: rgba(0, 124, 207, 0.08);
+}
+
+:root[data-theme='light'] .cta-banner {
+    background: linear-gradient(115deg, rgba(0, 124, 207, 0.13), rgba(255, 179, 107, 0.16));
+}
+
+:root[data-theme='light'] .form-control,
+:root[data-theme='light'] .newsletter-input,
+:root[data-theme='light'] .add-section-control select {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+:root[data-theme='light'] .form-control::placeholder,
+:root[data-theme='light'] .newsletter-input::placeholder {
+    color: rgba(42, 55, 84, 0.45);
+}
+
+:root[data-theme='light'] .site-footer {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme='light'] .footer-social-btn {
+    color: rgba(16, 24, 39, 0.62);
+    background: rgba(255, 255, 255, 0.62);
+    border-color: var(--border);
+}
+
+:root[data-theme='light'] .footer-bottom-grid,
+:root[data-theme='light'] .newsletter-box {
+    background: rgba(255, 255, 255, 0.64);
+}
+
+:root[data-theme='light'] .footer-copyright-text {
+    color: rgba(16, 24, 39, 0.56);
+}
+
 @keyframes float {
     0% {
         transform: translate(0, 0);
@@ -2084,7 +2339,7 @@ textarea.form-control {
         width: min(320px, 82vw);
         height: 100vh;
         padding: 90px 32px;
-        background: rgba(3, 5, 11, 0.98);
+        background: var(--mobile-nav-bg);
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
