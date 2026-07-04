@@ -81,9 +81,6 @@ function PageShell({ children }) {
               ))}
             </ul>
             <div className="nav-actions">
-              <Link to="/admin/projects" className="nav-cta">
-                Admin
-              </Link>
               <ThemeToggle />
             </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
