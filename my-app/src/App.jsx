@@ -272,17 +272,18 @@ function HomePage() {
     canvas.height = window.innerHeight;
 
     const particles = [];
-    const particleCount = window.innerWidth < 768 ? 45 : 90;
+    const isMobileScreen = window.innerWidth < 768;
+    const particleCount = isMobileScreen ? 66 : 90;
     let animationFrameId;
 
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2.5 + 1;
+        this.size = Math.random() * (isMobileScreen ? 3.1 : 2.5) + (isMobileScreen ? 1.1 : 1);
         this.speedX = Math.random() * 0.8 - 0.4;
         this.speedY = Math.random() * 0.8 - 0.4;
-        this.alpha = Math.random() * 0.45 + 0.12;
+        this.alpha = Math.random() * (isMobileScreen ? 0.52 : 0.45) + (isMobileScreen ? 0.18 : 0.12);
       }
 
       update() {
@@ -317,7 +318,7 @@ function HomePage() {
           const distance = Math.sqrt(dx * dx + dy * dy);
           if (distance < 105) {
             ctx.strokeStyle = getParticleLineColor(1 - distance / 105);
-            ctx.lineWidth = 0.45;
+            ctx.lineWidth = isMobileScreen ? 0.7 : 0.45;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
