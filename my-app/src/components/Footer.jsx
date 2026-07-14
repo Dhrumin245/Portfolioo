@@ -72,7 +72,7 @@ const Footer = () => {
             <h4>Contact Us:</h4>
             <p className="contact-address">Mumbai, Maharashtra, India |</p>
             <p className="contact-details">
-              <a href="tel:+919876543210">+91 9876543210</a> | <a href="mailto:[dhr.285.fig@gmail.com]">[dhr.285.fig@gmail.com]</a>
+              <a href="tel:+919876543210">+91 9876543210</a> | <a href="mailto:[dhrumintechnotech@gmail.com]">[dhrumintechnotech@gmail.com]</a>
             </p>
           </div>
         </div>
@@ -86,7 +86,7 @@ const Footer = () => {
               <span className="diagonal-line purple"></span>
             </div>
             <span className="footer-copyright-text">
-              © 2026 DHRUMIN TECH WORLD. ALL RIGHTS RESERVED.
+              © 2026 DHRUMIN TECHNOTECH WORLD. ALL RIGHTS RESERVED.
             </span>
             <div className="diagonal-lines">
               <span className="diagonal-line purple"></span>
