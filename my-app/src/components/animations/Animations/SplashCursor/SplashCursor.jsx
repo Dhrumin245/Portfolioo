@@ -3,7 +3,7 @@
 */
 
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DEFAULT_BACK_COLOR = { r: 0.5, g: 0, b: 0 };
 
@@ -24,8 +24,15 @@ function SplashCursor({
   TRANSPARENT = true,
 }) {
   const canvasRef = useRef(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (isMobile) {
+      setVisible(false);
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -1267,6 +1274,8 @@ function SplashCursor({
     BACK_COLOR.b,
     TRANSPARENT,
   ]);
+
+  if (!visible) return null;
 
   return (
     <div

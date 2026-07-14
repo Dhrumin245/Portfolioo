@@ -2325,7 +2325,9 @@ textarea.form-control {
     }
 
     .hero {
-        padding-bottom: 170px;
+        flex-direction: column;
+        align-items: stretch;
+        padding-bottom: 0;
     }
 
     .hero-grid {
@@ -2333,7 +2335,24 @@ textarea.form-control {
     }
 
     .stats-bar {
+        position: relative;
+        margin-top: 48px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stats-bar .stat-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stats-bar .stat-item:nth-child(odd) {
+        border-right: 1px solid var(--border);
+    }
+
+    .stats-bar .stat-item:nth-child(3),
+    .stats-bar .stat-item:nth-child(4) {
+        border-bottom: none;
     }
 
     .services-grid,
@@ -2464,10 +2483,14 @@ textarea.form-control {
         grid-template-columns: 1fr;
     }
 
-    .stat-item {
+    .stats-bar .stat-item {
         min-height: auto;
-        border-right: 0;
+        border-right: none !important;
         border-bottom: 1px solid var(--border);
+    }
+
+    .stats-bar .stat-item:last-child {
+        border-bottom: none;
     }
 
     .section {
