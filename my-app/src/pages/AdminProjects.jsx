@@ -350,6 +350,7 @@ function AdminProjects() {
         <div className="container">
           <nav>
             <Link to="/" className="logo">
+              <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
               Dhrumin's <span>Tech world</span>
             </Link>
             <div className="footer-links admin-nav">

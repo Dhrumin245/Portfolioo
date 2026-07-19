@@ -363,6 +363,7 @@ function HomePage() {
         <div className="container">
           <nav>
             <Link to="/" className="logo">
+              <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
               Dhrumin's <span>Tech world</span>
             </Link>
             <ul className="nav-links">
@@ -796,6 +797,7 @@ function ProjectComingSoon() {
         <div className="container">
           <nav>
             <Link to="/" className="logo">
+              <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
               Dhrumin's <span>Tech world</span>
             </Link>
             <ul className="nav-links">
