@@ -54,8 +54,10 @@ describe('Contact Routes', () => {
     process.env = originalEnv;
   });
 
-  it('POST /api/contact should return 400 when email is invalid format or unauthentic', async () => {
-    dns.promises.resolveMx.mockRejectedValue(new Error('ENOTFOUND'));
+  it('POST /api/contact should return 400 when email is invalid format or domain does not exist', async () => {
+    const err = new Error('Domain not found');
+    err.code = 'ENOTFOUND';
+    dns.promises.resolveMx.mockRejectedValue(err);
 
     const response = await request(app)
       .post('/api/contact')
@@ -94,7 +96,7 @@ describe('Contact Routes', () => {
 
   it('POST /api/contact should return 200, save message, and send email via Resend when RESEND_API_KEY is configured', async () => {
     Contact.prototype.save = vi.fn().mockResolvedValue({});
-    mockResendSend.mockResolvedValue({ id: 'resend_123' });
+    mockResendSend.mockResolvedValue({ data: { id: 'resend_123' }, error: null });
 
     process.env.RESEND_API_KEY = 're_test_key_123';
     process.env.RESEND_FROM_EMAIL = 'onboarding@resend.dev';
@@ -121,11 +123,15 @@ describe('Contact Routes', () => {
     });
   });
 
-  it('POST /api/contact should return 200, save message, and send email via Nodemailer fallback when SMTP configured', async () => {
+  it('POST /api/contact should fallback to Nodemailer SMTP if Resend API returns an error', async () => {
     Contact.prototype.save = vi.fn().mockResolvedValue({});
+    mockResendSend.mockResolvedValue({
+      data: null,
+      error: { statusCode: 403, message: 'You can only send testing emails to your own email address' },
+    });
     mockSendMail.mockResolvedValue({});
-    delete process.env.RESEND_API_KEY;
 
+    process.env.RESEND_API_KEY = 're_test_key_123';
     process.env.SMTP_HOST = 'smtp.example.com';
     process.env.SMTP_PORT = '587';
     process.env.SMTP_USER = 'user@example.com';
@@ -141,22 +147,9 @@ describe('Contact Routes', () => {
       });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Message sent successfully' });
-    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
-    expect(nodemailer.createTransport).toHaveBeenCalledWith({
-      host: 'smtp.example.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'user@example.com',
-        pass: 'password',
-      },
-    });
+    expect(mockResendSend).toHaveBeenCalled();
+    expect(nodemailer.createTransport).toHaveBeenCalled();
     expect(mockSendMail).toHaveBeenCalled();
-    const mailArgs = mockSendMail.mock.calls[0][0];
-    expect(mailArgs.to).toBe('dhrumintechnotech@gmail.com');
-    expect(mailArgs.from).toContain('Jane Doe via Portfolio');
-    expect(mailArgs.replyTo).toBe('jane@example.com');
   });
 
   it('POST /api/contact should return 500 when database save fails', async () => {

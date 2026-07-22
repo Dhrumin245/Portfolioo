@@ -22,8 +22,12 @@ export const verifyEmailAuthenticity = async (email) => {
     }
     return true;
   } catch (err) {
-    console.warn(`Email authenticity check failed for domain ${domain}:`, err.message);
-    return false;
+    if (err.code === 'ENOTFOUND' || err.code === 'ENODATA' || err.code === 'NXDOMAIN') {
+      console.warn(`Email authenticity check rejected domain ${domain}:`, err.code);
+      return false;
+    }
+    console.warn(`DNS lookup warning for domain ${domain} (${err.code || err.message}): proceeding with format validation.`);
+    return true;
   }
 };
 
@@ -71,11 +75,13 @@ router.post('/', async (req, res) => {
       </div>
     `;
 
+    let emailSent = false;
+
     if (RESEND_API_KEY) {
       try {
         const resend = new Resend(RESEND_API_KEY);
         const fromAddress = RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        await resend.emails.send({
+        const resendResult = await resend.emails.send({
           from: `"${formattedSenderName}" <${fromAddress}>`,
           to: recipient,
           replyTo: email,
@@ -83,11 +89,19 @@ router.post('/', async (req, res) => {
           text: textBody,
           html: htmlBody,
         });
-        console.log('Email notification sent successfully via Resend to', recipient);
+
+        if (resendResult.error) {
+          console.error('Resend API returned an error:', resendResult.error.message || resendResult.error);
+        } else {
+          console.log('Email notification sent successfully via Resend to', recipient);
+          emailSent = true;
+        }
       } catch (resendError) {
         console.error('Error sending email notification via Resend:', resendError);
       }
-    } else if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    }
+
+    if (!emailSent && SMTP_HOST && SMTP_USER && SMTP_PASS) {
       try {
         const isSecure = process.env.SMTP_SECURE === 'true';
         const transporter = nodemailer.createTransport({
@@ -110,11 +124,14 @@ router.post('/', async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log('Email notification sent successfully via Nodemailer to', recipient);
+        console.log('Email notification sent successfully via Nodemailer fallback to', recipient);
+        emailSent = true;
       } catch (emailError) {
         console.error('Error sending email notification via Nodemailer:', emailError);
       }
-    } else {
+    }
+
+    if (!emailSent && !RESEND_API_KEY && (!SMTP_HOST || !SMTP_USER || !SMTP_PASS)) {
       console.warn('Email notification skipped: Neither RESEND_API_KEY nor SMTP settings are configured.');
     }
 
