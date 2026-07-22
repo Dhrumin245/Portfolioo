@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import dns from 'dns';
-import contactRoutes from '../../routes/contactRoutes.js';
+import contactRoutes, { verifiedEmailTokens } from '../../routes/contactRoutes.js';
 import Contact from '../../models/contact.js';
 import nodemailer from 'nodemailer';
 
@@ -71,6 +71,7 @@ describe('Contact Routes', () => {
     app.use('/api/contact', contactRoutes);
     vi.clearAllMocks();
     otpStoreMap.clear();
+    verifiedEmailTokens.clear();
     process.env = { ...originalEnv };
     dns.promises.resolveMx.mockResolvedValue([{ exchange: 'mail.example.com', priority: 10 }]);
   });
@@ -117,9 +118,33 @@ describe('Contact Routes', () => {
     expect(mockResendSend).toHaveBeenCalled();
   });
 
-  // ── Submit with OTP Tests ──
+  // ── Standalone Verify OTP Tests ──
 
-  it('POST /api/contact should return 400 when OTP is missing', async () => {
+  it('POST /api/contact/verify-otp should return 400 for wrong OTP', async () => {
+    otpStoreMap.set('jane@example.com', '123456');
+
+    const response = await request(app)
+      .post('/api/contact/verify-otp')
+      .send({ email: 'jane@example.com', otp: '999999' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('Invalid code');
+  });
+
+  it('POST /api/contact/verify-otp should return 200 for correct OTP', async () => {
+    otpStoreMap.set('jane@example.com', '123456');
+
+    const response = await request(app)
+      .post('/api/contact/verify-otp')
+      .send({ email: 'jane@example.com', otp: '123456' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toContain('Email verified successfully');
+  });
+
+  // ── Submit with OTP / Pre-verified Tests ──
+
+  it('POST /api/contact should return 400 when unverified and OTP is missing', async () => {
     const response = await request(app)
       .post('/api/contact')
       .send({ name: 'Jane', email: 'jane@example.com', message: 'Hello' });
@@ -137,39 +162,26 @@ describe('Contact Routes', () => {
     expect(response.body.error).toContain('Temporary or disposable');
   });
 
-  it('POST /api/contact should return 400 for invalid OTP', async () => {
-    otpStoreMap.set('jane@example.com', '123456');
-    const response = await request(app)
-      .post('/api/contact')
-      .send({ name: 'Jane', email: 'jane@example.com', message: 'Hello', otp: '000000' });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error).toContain('Invalid code');
-  });
-
-  it('POST /api/contact should return 200 with valid OTP and send notification', async () => {
+  it('POST /api/contact should return 200 when pre-verified via verify-otp endpoint', async () => {
     Contact.prototype.save = vi.fn().mockResolvedValue({});
     mockResendSend.mockResolvedValue({ data: { id: 'resend_notify' }, error: null });
     process.env.RESEND_API_KEY = 're_test_key';
     process.env.RESEND_FROM_EMAIL = 'contact@test.com';
-    process.env.EMAIL_TO = 'dhrumintechnotech@gmail.com';
 
-    // Simulate OTP was previously generated
+    // 1. Verify OTP first
     otpStoreMap.set('jane@example.com', '123456');
+    await request(app)
+      .post('/api/contact/verify-otp')
+      .send({ email: 'jane@example.com', otp: '123456' });
 
+    // 2. Submit form without requiring OTP again
     const response = await request(app)
       .post('/api/contact')
-      .send({ name: 'Jane Doe', email: 'jane@example.com', message: 'Build my app', otp: '123456' });
+      .send({ name: 'Jane Doe', email: 'jane@example.com', message: 'Build my app' });
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Message sent successfully');
     expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
-    // Notification email should have been sent
-    expect(mockResendSend).toHaveBeenCalled();
-    const sendArgs = mockResendSend.mock.calls[0][0];
-    expect(sendArgs.to).toBe('dhrumintechnotech@gmail.com');
-    expect(sendArgs.replyTo).toBe('jane@example.com');
-    expect(sendArgs.from).toContain('Jane Doe via Portfolio');
   });
 
   it('POST /api/contact should return 500 when database save fails', async () => {

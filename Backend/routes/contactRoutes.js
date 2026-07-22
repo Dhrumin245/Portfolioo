@@ -170,28 +170,61 @@ router.post('/send-otp', async (req, res) => {
   res.status(200).json({ message: 'Verification code sent to your email.' });
 });
 
+// Store pre-verified email tokens (email -> expiry timestamp)
+export const verifiedEmailTokens = new Map();
+
 /**
- * POST /api/contact
- * Step 2: Submit the contact form (requires valid OTP).
+ * POST /api/contact/verify-otp
+ * Step 1b: Standalone OTP verification before form submission.
  */
-router.post('/', async (req, res) => {
-  const { name, email, message, otp } = req.body;
-  console.log('Received:', { name, email, message, otp: otp ? '***' : 'missing' });
+router.post('/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
 
-  // Require OTP
-  if (!otp) {
-    return res.status(400).json({ error: 'Email verification code is required.' });
-  }
-
-  // Check for disposable/temp email
-  if (isDisposableEmail(email)) {
-    return res.status(400).json({ error: 'Temporary or disposable email addresses are not allowed.' });
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and verification code are required.' });
   }
 
   // Verify OTP
   const otpResult = verifyOTP(email, otp);
   if (!otpResult.valid) {
     return res.status(400).json({ error: otpResult.error });
+  }
+
+  // Store pre-verified token valid for 15 minutes
+  verifiedEmailTokens.set(email.trim().toLowerCase(), Date.now() + 15 * 60 * 1000);
+
+  console.log(`Email pre-verified successfully: ${email}`);
+  res.status(200).json({ message: 'Email verified successfully!' });
+});
+
+/**
+ * POST /api/contact
+ * Step 2: Submit the contact form (requires verified email or valid OTP).
+ */
+router.post('/', async (req, res) => {
+  const { name, email, message, otp } = req.body;
+  console.log('Received:', { name, email, message, otp: otp ? '***' : 'missing' });
+
+  // Check for disposable/temp email
+  if (isDisposableEmail(email)) {
+    return res.status(400).json({ error: 'Temporary or disposable email addresses are not allowed.' });
+  }
+
+  const emailKey = email ? email.trim().toLowerCase() : '';
+  const isPreVerified = verifiedEmailTokens.has(emailKey) && verifiedEmailTokens.get(emailKey) > Date.now();
+
+  if (!isPreVerified) {
+    if (!otp) {
+      return res.status(400).json({ error: 'Email verification code is required.' });
+    }
+
+    const otpResult = verifyOTP(email, otp);
+    if (!otpResult.valid) {
+      return res.status(400).json({ error: otpResult.error });
+    }
+  } else {
+    // Consume pre-verified token
+    verifiedEmailTokens.delete(emailKey);
   }
 
   try {

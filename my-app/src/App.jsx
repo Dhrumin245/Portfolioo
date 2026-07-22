@@ -133,6 +133,7 @@ function HomePage() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [formMessage, setFormMessage] = useState({ type: '', text: '' });
@@ -145,12 +146,15 @@ function HomePage() {
   }, [otpCooldown]);
 
   // Reset OTP state when email changes
-  useEffect(() => {
-    setOtpSent(false);
-    setEmailVerified(false);
-    setOtp('');
-    setFormMessage({ type: '', text: '' });
-  }, [email]);
+  const handleEmailChange = (val) => {
+    setEmail(val);
+    if (emailVerified || otpSent) {
+      setOtpSent(false);
+      setEmailVerified(false);
+      setOtp('');
+      setFormMessage({ type: '', text: '' });
+    }
+  };
 
   const handleSendOtp = async () => {
     if (!email) {
@@ -185,10 +189,40 @@ function HomePage() {
     }
   };
 
+  const handleVerifyOtp = async (codeToVerify = otp) => {
+    if (!codeToVerify || codeToVerify.length !== 6) {
+      setFormMessage({ type: 'error', text: 'Please enter the 6-digit verification code.' });
+      return;
+    }
+    setVerifyingOtp(true);
+    setFormMessage({ type: '', text: '' });
+    try {
+      const res = await fetch(apiUrl('/api/contact/verify-otp'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp: codeToVerify }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setEmailVerified(true);
+        setOtpSent(false); // Disappear the OTP box once verified!
+        setOtp('');
+        setFormMessage({ type: 'success', text: '✓ Email verified successfully!' });
+      } else {
+        setFormMessage({ type: 'error', text: data.error || 'Invalid verification code.' });
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      setFormMessage({ type: 'error', text: 'Failed to verify code. Please try again.' });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!otp) {
-      setFormMessage({ type: 'error', text: 'Please enter the verification code sent to your email.' });
+    if (!emailVerified) {
+      setFormMessage({ type: 'error', text: 'Please verify your email address first.' });
       return;
     }
     setSubmitLoading(true);
@@ -197,7 +231,7 @@ function HomePage() {
       const res = await fetch(apiUrl('/api/contact'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message, otp }),
+        body: JSON.stringify({ name, email, message }),
       });
 
       const resData = await res.json().catch(() => ({}));
@@ -685,38 +719,66 @@ function HomePage() {
                     id="email"
                     className="form-control"
                     required
+                    disabled={emailVerified}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                   />
-                  <button
-                    type="button"
-                    className={`verify-email-btn ${otpSent ? 'sent' : ''}`}
-                    onClick={handleSendOtp}
-                    disabled={otpLoading || otpCooldown > 0 || !email}
-                  >
-                    {otpLoading
-                      ? 'Sending...'
-                      : otpCooldown > 0
-                        ? `Resend (${otpCooldown}s)`
-                        : otpSent
-                          ? 'Resend Code'
-                          : 'Verify'}
-                  </button>
+                  {emailVerified ? (
+                    <button
+                      type="button"
+                      className="verify-email-btn verified-badge"
+                      onClick={() => handleEmailChange(email)}
+                      title="Click to change email"
+                    >
+                      ✓ Verified
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`verify-email-btn ${otpSent ? 'sent' : ''}`}
+                      onClick={handleSendOtp}
+                      disabled={otpLoading || otpCooldown > 0 || !email}
+                    >
+                      {otpLoading
+                        ? 'Sending...'
+                        : otpCooldown > 0
+                          ? `Resend (${otpCooldown}s)`
+                          : otpSent
+                            ? 'Resend Code'
+                            : 'Verify Email'}
+                    </button>
+                  )}
                 </div>
               </div>
-              {otpSent && (
+              {otpSent && !emailVerified && (
                 <div className="form-group otp-group">
                   <label htmlFor="otp">Verification Code</label>
-                  <input
-                    type="text"
-                    id="otp"
-                    className="form-control otp-input"
-                    placeholder="Enter 6-digit code"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    autoComplete="one-time-code"
-                  />
+                  <div className="otp-input-row">
+                    <input
+                      type="text"
+                      id="otp"
+                      className="form-control otp-input"
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setOtp(val);
+                        if (val.length === 6) {
+                          handleVerifyOtp(val);
+                        }
+                      }}
+                      autoComplete="one-time-code"
+                    />
+                    <button
+                      type="button"
+                      className="verify-code-btn"
+                      onClick={() => handleVerifyOtp(otp)}
+                      disabled={verifyingOtp || otp.length !== 6}
+                    >
+                      {verifyingOtp ? 'Verifying...' : 'Verify Code'}
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="form-group">
@@ -733,7 +795,7 @@ function HomePage() {
               <button
                 type="submit"
                 className="submit-btn"
-                disabled={submitLoading || !otpSent || !otp}
+                disabled={submitLoading || !emailVerified}
               >
                 {submitLoading ? 'Sending...' : 'Send Project Brief'}
               </button>
