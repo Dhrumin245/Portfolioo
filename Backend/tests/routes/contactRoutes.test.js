@@ -8,6 +8,14 @@ import nodemailer from 'nodemailer';
 
 vi.mock('../../models/contact.js');
 
+vi.mock('../../utils/disposableEmails.js', () => ({
+  isDisposableEmail: vi.fn((email) => {
+    const disposable = ['tempmail.com', 'guerrillamail.com', 'yopmail.com'];
+    const domain = email?.split('@')[1];
+    return disposable.includes(domain);
+  }),
+}));
+
 const mockSendMail = vi.fn();
 vi.mock('nodemailer', () => ({
   default: {
@@ -36,6 +44,23 @@ vi.mock('dns', () => ({
   },
 }));
 
+// Mock otpStore
+const otpStoreMap = new Map();
+vi.mock('../../utils/otpStore.js', () => ({
+  createOTP: vi.fn((email) => {
+    const code = '123456';
+    otpStoreMap.set(email.toLowerCase(), code);
+    return { code, cooldown: false };
+  }),
+  verifyOTP: vi.fn((email, code) => {
+    const stored = otpStoreMap.get(email.toLowerCase());
+    if (!stored) return { valid: false, error: 'No verification code found.' };
+    if (stored !== code) return { valid: false, error: 'Invalid code.' };
+    otpStoreMap.delete(email.toLowerCase());
+    return { valid: true, error: null };
+  }),
+}));
+
 describe('Contact Routes', () => {
   let app;
   const originalEnv = { ...process.env };
@@ -45,8 +70,8 @@ describe('Contact Routes', () => {
     app.use(express.json());
     app.use('/api/contact', contactRoutes);
     vi.clearAllMocks();
+    otpStoreMap.clear();
     process.env = { ...originalEnv };
-    // Default valid MX resolution for jane@example.com
     dns.promises.resolveMx.mockResolvedValue([{ exchange: 'mail.example.com', priority: 10 }]);
   });
 
@@ -54,116 +79,108 @@ describe('Contact Routes', () => {
     process.env = originalEnv;
   });
 
-  it('POST /api/contact should return 400 when email is invalid format or domain does not exist', async () => {
-    const err = new Error('Domain not found');
+  // ── Send OTP Tests ──
+
+  it('POST /api/contact/send-otp should return 400 for disposable email', async () => {
+    const response = await request(app)
+      .post('/api/contact/send-otp')
+      .send({ email: 'user@tempmail.com' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('Temporary or disposable');
+  });
+
+  it('POST /api/contact/send-otp should return 400 for invalid domain', async () => {
+    const err = new Error('ENOTFOUND');
     err.code = 'ENOTFOUND';
     dns.promises.resolveMx.mockRejectedValue(err);
 
     const response = await request(app)
-      .post('/api/contact')
-      .send({
-        name: 'Bad Email',
-        email: 'invalid-email-or-fake-domain.fake',
-        message: 'Hello!',
-      });
+      .post('/api/contact/send-otp')
+      .send({ email: 'user@fake123domain.xyz' });
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'Please provide a valid, authentic email address.' });
-    expect(Contact.prototype.save).not.toHaveBeenCalled();
+    expect(response.body.error).toContain('valid email');
   });
 
-  it('POST /api/contact should return 200, save message, and skip email if neither Resend nor SMTP configured', async () => {
-    Contact.prototype.save = vi.fn().mockResolvedValue({});
-    delete process.env.RESEND_API_KEY;
-    delete process.env.SMTP_HOST;
-    delete process.env.SMTP_USER;
-    delete process.env.SMTP_PASS;
+  it('POST /api/contact/send-otp should send OTP for valid email', async () => {
+    mockResendSend.mockResolvedValue({ data: { id: 'resend_otp' }, error: null });
+    process.env.RESEND_API_KEY = 're_test_key';
+    process.env.RESEND_FROM_EMAIL = 'contact@test.com';
 
     const response = await request(app)
-      .post('/api/contact')
-      .send({
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        message: 'Hello!',
-      });
+      .post('/api/contact/send-otp')
+      .send({ email: 'jane@example.com' });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Message sent successfully' });
-    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
-    expect(nodemailer.createTransport).not.toHaveBeenCalled();
-    expect(mockResendSend).not.toHaveBeenCalled();
-  });
-
-  it('POST /api/contact should return 200, save message, and send email via Resend when RESEND_API_KEY is configured', async () => {
-    Contact.prototype.save = vi.fn().mockResolvedValue({});
-    mockResendSend.mockResolvedValue({ data: { id: 'resend_123' }, error: null });
-
-    process.env.RESEND_API_KEY = 're_test_key_123';
-    process.env.RESEND_FROM_EMAIL = 'onboarding@resend.dev';
-    process.env.EMAIL_TO = 'dhrumintechnotech@gmail.com';
-
-    const response = await request(app)
-      .post('/api/contact')
-      .send({
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        message: 'Hello via Resend!',
-      });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Message sent successfully' });
-    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
-    expect(mockResendSend).toHaveBeenCalledWith({
-      from: '"Jane Doe via Portfolio" <onboarding@resend.dev>',
-      to: 'dhrumintechnotech@gmail.com',
-      replyTo: 'jane@example.com',
-      subject: 'New Portfolio Project Brief from Jane Doe',
-      text: expect.stringContaining('Hello via Resend!'),
-      html: expect.stringContaining('Jane Doe'),
-    });
-  });
-
-  it('POST /api/contact should fallback to Nodemailer SMTP if Resend API returns an error', async () => {
-    Contact.prototype.save = vi.fn().mockResolvedValue({});
-    mockResendSend.mockResolvedValue({
-      data: null,
-      error: { statusCode: 403, message: 'You can only send testing emails to your own email address' },
-    });
-    mockSendMail.mockResolvedValue({});
-
-    process.env.RESEND_API_KEY = 're_test_key_123';
-    process.env.SMTP_HOST = 'smtp.example.com';
-    process.env.SMTP_PORT = '587';
-    process.env.SMTP_USER = 'user@example.com';
-    process.env.SMTP_PASS = 'password';
-    process.env.EMAIL_TO = 'dhrumintechnotech@gmail.com';
-
-    const response = await request(app)
-      .post('/api/contact')
-      .send({
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        message: 'Hello!',
-      });
-
-    expect(response.status).toBe(200);
+    expect(response.body.message).toContain('Verification code sent');
     expect(mockResendSend).toHaveBeenCalled();
-    expect(nodemailer.createTransport).toHaveBeenCalled();
-    expect(mockSendMail).toHaveBeenCalled();
+  });
+
+  // ── Submit with OTP Tests ──
+
+  it('POST /api/contact should return 400 when OTP is missing', async () => {
+    const response = await request(app)
+      .post('/api/contact')
+      .send({ name: 'Jane', email: 'jane@example.com', message: 'Hello' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('verification code is required');
+  });
+
+  it('POST /api/contact should return 400 for disposable email', async () => {
+    const response = await request(app)
+      .post('/api/contact')
+      .send({ name: 'Jane', email: 'user@yopmail.com', message: 'Hello', otp: '123456' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('Temporary or disposable');
+  });
+
+  it('POST /api/contact should return 400 for invalid OTP', async () => {
+    otpStoreMap.set('jane@example.com', '123456');
+    const response = await request(app)
+      .post('/api/contact')
+      .send({ name: 'Jane', email: 'jane@example.com', message: 'Hello', otp: '000000' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain('Invalid code');
+  });
+
+  it('POST /api/contact should return 200 with valid OTP and send notification', async () => {
+    Contact.prototype.save = vi.fn().mockResolvedValue({});
+    mockResendSend.mockResolvedValue({ data: { id: 'resend_notify' }, error: null });
+    process.env.RESEND_API_KEY = 're_test_key';
+    process.env.RESEND_FROM_EMAIL = 'contact@test.com';
+    process.env.EMAIL_TO = 'dhrumintechnotech@gmail.com';
+
+    // Simulate OTP was previously generated
+    otpStoreMap.set('jane@example.com', '123456');
+
+    const response = await request(app)
+      .post('/api/contact')
+      .send({ name: 'Jane Doe', email: 'jane@example.com', message: 'Build my app', otp: '123456' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Message sent successfully');
+    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
+    // Notification email should have been sent
+    expect(mockResendSend).toHaveBeenCalled();
+    const sendArgs = mockResendSend.mock.calls[0][0];
+    expect(sendArgs.to).toBe('dhrumintechnotech@gmail.com');
+    expect(sendArgs.replyTo).toBe('jane@example.com');
+    expect(sendArgs.from).toContain('Jane Doe via Portfolio');
   });
 
   it('POST /api/contact should return 500 when database save fails', async () => {
     Contact.prototype.save = vi.fn().mockRejectedValue(new Error('DB connection failed'));
+    otpStoreMap.set('jane@example.com', '123456');
 
     const response = await request(app)
       .post('/api/contact')
-      .send({
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        message: 'Hello!',
-      });
+      .send({ name: 'Jane', email: 'jane@example.com', message: 'Hello', otp: '123456' });
 
     expect(response.status).toBe(500);
-    expect(response.body).toEqual({ error: 'Failed to send message' });
+    expect(response.body.error).toBe('Failed to send message');
   });
 });

@@ -128,29 +128,95 @@ function HomePage() {
   const [message, setMessage] = useState('');
   const [portfolioProjects, setPortfolioProjects] = useState(projects);
 
+  // OTP verification state
+  const [otp, setOtp] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [formMessage, setFormMessage] = useState({ type: '', text: '' });
+
+  // Cooldown timer
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setTimeout(() => setOtpCooldown(otpCooldown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [otpCooldown]);
+
+  // Reset OTP state when email changes
+  useEffect(() => {
+    setOtpSent(false);
+    setEmailVerified(false);
+    setOtp('');
+    setFormMessage({ type: '', text: '' });
+  }, [email]);
+
+  const handleSendOtp = async () => {
+    if (!email) {
+      setFormMessage({ type: 'error', text: 'Please enter your email first.' });
+      return;
+    }
+    setOtpLoading(true);
+    setFormMessage({ type: '', text: '' });
+    try {
+      const res = await fetch(apiUrl('/api/contact/send-otp'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setOtpSent(true);
+        setOtpCooldown(60);
+        setFormMessage({ type: 'success', text: 'Verification code sent! Check your email.' });
+      } else if (res.status === 429) {
+        const seconds = data.error?.match(/(\d+) seconds/)?.[1] || '60';
+        setOtpCooldown(parseInt(seconds));
+        setFormMessage({ type: 'error', text: data.error });
+      } else {
+        setFormMessage({ type: 'error', text: data.error || 'Failed to send verification code.' });
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      setFormMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!otp) {
+      setFormMessage({ type: 'error', text: 'Please enter the verification code sent to your email.' });
+      return;
+    }
+    setSubmitLoading(true);
+    setFormMessage({ type: '', text: '' });
     try {
       const res = await fetch(apiUrl('/api/contact'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, message }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message, otp }),
       });
 
       const resData = await res.json().catch(() => ({}));
       if (res.ok) {
-        alert('Project brief sent successfully!');
+        setFormMessage({ type: 'success', text: 'Project brief sent successfully!' });
         setName('');
         setEmail('');
         setMessage('');
+        setOtp('');
+        setOtpSent(false);
+        setEmailVerified(false);
       } else {
-        alert(resData.error || 'Failed to send project brief');
+        setFormMessage({ type: 'error', text: resData.error || 'Failed to send project brief.' });
       }
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      alert('Something went wrong!');
+      setFormMessage({ type: 'error', text: 'Something went wrong!' });
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -593,6 +659,13 @@ function HomePage() {
             </div>
 
             <form className="contact-form reveal" onSubmit={handleSubmit}>
+              {formMessage.text && (
+                <div className={`form-message ${formMessage.type}`}>
+                  {formMessage.type === 'success' && <span className="form-message-icon">✓</span>}
+                  {formMessage.type === 'error' && <span className="form-message-icon">✕</span>}
+                  {formMessage.text}
+                </div>
+              )}
               <div className="form-group">
                 <label htmlFor="name">Name</label>
                 <input
@@ -606,15 +679,46 @@ function HomePage() {
               </div>
               <div className="form-group">
                 <label htmlFor="email">Business Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  className="form-control"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div className="email-verify-row">
+                  <input
+                    type="email"
+                    id="email"
+                    className="form-control"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className={`verify-email-btn ${otpSent ? 'sent' : ''}`}
+                    onClick={handleSendOtp}
+                    disabled={otpLoading || otpCooldown > 0 || !email}
+                  >
+                    {otpLoading
+                      ? 'Sending...'
+                      : otpCooldown > 0
+                        ? `Resend (${otpCooldown}s)`
+                        : otpSent
+                          ? 'Resend Code'
+                          : 'Verify'}
+                  </button>
+                </div>
               </div>
+              {otpSent && (
+                <div className="form-group otp-group">
+                  <label htmlFor="otp">Verification Code</label>
+                  <input
+                    type="text"
+                    id="otp"
+                    className="form-control otp-input"
+                    placeholder="Enter 6-digit code"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label htmlFor="message">Project Brief</label>
                 <textarea
@@ -626,8 +730,12 @@ function HomePage() {
                   placeholder="What are you building, and what should it do?"
                 ></textarea>
               </div>
-              <button type="submit" className="submit-btn">
-                Send Project Brief
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={submitLoading || !otpSent || !otp}
+              >
+                {submitLoading ? 'Sending...' : 'Send Project Brief'}
               </button>
             </form>
           </div>
