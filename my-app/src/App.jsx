@@ -139,13 +139,14 @@ function HomePage() {
         body: JSON.stringify({ name, email, message }),
       });
 
+      const resData = await res.json().catch(() => ({}));
       if (res.ok) {
         alert('Project brief sent successfully!');
         setName('');
         setEmail('');
         setMessage('');
       } else {
-        alert('Failed to send project brief');
+        alert(resData.error || 'Failed to send project brief');
       }
     } catch (error) {
       console.error('Error submitting contact form:', error);

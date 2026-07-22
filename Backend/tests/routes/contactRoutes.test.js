@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+import dns from 'dns';
 import contactRoutes from '../../routes/contactRoutes.js';
 import Contact from '../../models/contact.js';
 import nodemailer from 'nodemailer';
@@ -16,6 +17,25 @@ vi.mock('nodemailer', () => ({
   },
 }));
 
+const mockResendSend = vi.fn();
+vi.mock('resend', () => ({
+  Resend: class {
+    constructor() {
+      this.emails = {
+        send: mockResendSend,
+      };
+    }
+  },
+}));
+
+vi.mock('dns', () => ({
+  default: {
+    promises: {
+      resolveMx: vi.fn(),
+    },
+  },
+}));
+
 describe('Contact Routes', () => {
   let app;
   const originalEnv = { ...process.env };
@@ -26,14 +46,33 @@ describe('Contact Routes', () => {
     app.use('/api/contact', contactRoutes);
     vi.clearAllMocks();
     process.env = { ...originalEnv };
+    // Default valid MX resolution for jane@example.com
+    dns.promises.resolveMx.mockResolvedValue([{ exchange: 'mail.example.com', priority: 10 }]);
   });
 
   afterEach(() => {
     process.env = originalEnv;
   });
 
-  it('POST /api/contact should return 200, save message, and skip email if SMTP not configured', async () => {
+  it('POST /api/contact should return 400 when email is invalid format or unauthentic', async () => {
+    dns.promises.resolveMx.mockRejectedValue(new Error('ENOTFOUND'));
+
+    const response = await request(app)
+      .post('/api/contact')
+      .send({
+        name: 'Bad Email',
+        email: 'invalid-email-or-fake-domain.fake',
+        message: 'Hello!',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Please provide a valid, authentic email address.' });
+    expect(Contact.prototype.save).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/contact should return 200, save message, and skip email if neither Resend nor SMTP configured', async () => {
     Contact.prototype.save = vi.fn().mockResolvedValue({});
+    delete process.env.RESEND_API_KEY;
     delete process.env.SMTP_HOST;
     delete process.env.SMTP_USER;
     delete process.env.SMTP_PASS;
@@ -50,11 +89,42 @@ describe('Contact Routes', () => {
     expect(response.body).toEqual({ message: 'Message sent successfully' });
     expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
     expect(nodemailer.createTransport).not.toHaveBeenCalled();
+    expect(mockResendSend).not.toHaveBeenCalled();
   });
 
-  it('POST /api/contact should return 200, save message, and send email when SMTP is configured', async () => {
+  it('POST /api/contact should return 200, save message, and send email via Resend when RESEND_API_KEY is configured', async () => {
+    Contact.prototype.save = vi.fn().mockResolvedValue({});
+    mockResendSend.mockResolvedValue({ id: 'resend_123' });
+
+    process.env.RESEND_API_KEY = 're_test_key_123';
+    process.env.RESEND_FROM_EMAIL = 'onboarding@resend.dev';
+    process.env.EMAIL_TO = 'dhrumintechnotech@gmail.com';
+
+    const response = await request(app)
+      .post('/api/contact')
+      .send({
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+        message: 'Hello via Resend!',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Message sent successfully' });
+    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
+    expect(mockResendSend).toHaveBeenCalledWith({
+      from: '"Jane Doe via Portfolio" <onboarding@resend.dev>',
+      to: 'dhrumintechnotech@gmail.com',
+      replyTo: 'jane@example.com',
+      subject: 'New Portfolio Project Brief from Jane Doe',
+      text: expect.stringContaining('Hello via Resend!'),
+      html: expect.stringContaining('Jane Doe'),
+    });
+  });
+
+  it('POST /api/contact should return 200, save message, and send email via Nodemailer fallback when SMTP configured', async () => {
     Contact.prototype.save = vi.fn().mockResolvedValue({});
     mockSendMail.mockResolvedValue({});
+    delete process.env.RESEND_API_KEY;
 
     process.env.SMTP_HOST = 'smtp.example.com';
     process.env.SMTP_PORT = '587';
@@ -85,32 +155,8 @@ describe('Contact Routes', () => {
     expect(mockSendMail).toHaveBeenCalled();
     const mailArgs = mockSendMail.mock.calls[0][0];
     expect(mailArgs.to).toBe('dhrumintechnotech@gmail.com');
+    expect(mailArgs.from).toContain('Jane Doe via Portfolio');
     expect(mailArgs.replyTo).toBe('jane@example.com');
-    expect(mailArgs.subject).toContain('Jane Doe');
-    expect(mailArgs.text).toContain('Hello!');
-  });
-
-  it('POST /api/contact should return 200 even if email sending fails', async () => {
-    Contact.prototype.save = vi.fn().mockResolvedValue({});
-    mockSendMail.mockRejectedValue(new Error('SMTP connection failed'));
-
-    process.env.SMTP_HOST = 'smtp.example.com';
-    process.env.SMTP_PORT = '587';
-    process.env.SMTP_USER = 'user@example.com';
-    process.env.SMTP_PASS = 'password';
-
-    const response = await request(app)
-      .post('/api/contact')
-      .send({
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        message: 'Hello!',
-      });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Message sent successfully' });
-    expect(Contact.prototype.save).toHaveBeenCalledTimes(1);
-    expect(mockSendMail).toHaveBeenCalled();
   });
 
   it('POST /api/contact should return 500 when database save fails', async () => {
@@ -128,4 +174,3 @@ describe('Contact Routes', () => {
     expect(response.body).toEqual({ error: 'Failed to send message' });
   });
 });
-
