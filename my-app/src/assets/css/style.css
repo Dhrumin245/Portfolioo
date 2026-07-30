@@ -2129,17 +2129,91 @@ textarea.form-control {
     padding: 18px;
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.045);
+    transition: border-color 0.2s ease;
+}
+
+.block-editor.collapsed {
+    gap: 0;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.block-editor-header {
+    user-select: none;
 }
 
 .block-editor-header strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: var(--light);
-    cursor: grab;
+    cursor: pointer;
+}
+
+.collapse-chevron {
+    display: inline-block;
+    font-size: 0.9em;
+    transition: transform 0.25s ease;
+}
+
+.collapse-chevron.chevron-collapsed {
+    transform: rotate(-90deg);
+}
+
+.block-editor-body {
+    animation: fadeSlideIn 0.25s ease;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .block-editor-header div {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+/* Collapse / Expand All + Add Section header layout */
+.add-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.collapse-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.collapse-toggle-btn {
+    padding: 6px 10px !important;
+    font-size: 0.78rem;
+    color: var(--text-secondary) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+
+.collapse-toggle-btn:hover {
+    color: var(--light) !important;
+    border-color: rgba(0, 212, 255, 0.3) !important;
+}
+
+/* Bottom "Add Section" control */
+.add-section-bottom {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 .block-field-grid {

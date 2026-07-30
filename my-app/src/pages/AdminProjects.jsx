@@ -90,6 +90,7 @@ function AdminProjects() {
   const [selectedType, setSelectedType] = useState('hero');
   const [status, setStatus] = useState('');
   const [dragIndex, setDragIndex] = useState(null);
+  const [collapsedBlocks, setCollapsedBlocks] = useState({});
 
   const previewProject = useMemo(() => project, [project]);
 
@@ -202,7 +203,29 @@ function AdminProjects() {
   };
 
   const addSection = () => {
+    const newIndex = project.blocks.length;
     setProject((current) => ({ ...current, blocks: [...current.blocks, newBlock(selectedType)] }));
+    // Auto-expand the newly added section
+    setCollapsedBlocks((prev) => ({ ...prev, [newIndex]: false }));
+    // Scroll to the new section after render
+    setTimeout(() => {
+      const el = document.getElementById(`block-editor-${newIndex}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  const toggleCollapse = (index) => {
+    setCollapsedBlocks((prev) => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const collapseAll = () => {
+    const next = {};
+    project.blocks.forEach((_, i) => { next[i] = true; });
+    setCollapsedBlocks(next);
+  };
+
+  const expandAll = () => {
+    setCollapsedBlocks({});
   };
 
   const removeSection = (index) => {
@@ -428,25 +451,38 @@ function AdminProjects() {
               <section className="cms-panel">
                 <div className="cms-panel-title">
                   <h2>Content</h2>
-                  <div className="add-section-control">
-                    <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
-                      {sectionTypes.map(([value, label]) => (
-                        <option value={value} key={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <button type="button" onClick={addSection}>
-                      + Add Section
-                    </button>
+                  <div className="add-section-actions">
+                    {project.blocks.length > 1 && (
+                      <div className="collapse-actions">
+                        <button type="button" className="collapse-toggle-btn" onClick={collapseAll} title="Collapse all sections">
+                          ⊟ Collapse All
+                        </button>
+                        <button type="button" className="collapse-toggle-btn" onClick={expandAll} title="Expand all sections">
+                          ⊞ Expand All
+                        </button>
+                      </div>
+                    )}
+                    <div className="add-section-control">
+                      <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
+                        {sectionTypes.map(([value, label]) => (
+                          <option value={value} key={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="button" onClick={addSection}>
+                        + Add Section
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="section-stack">
                   {project.blocks.map((block, index) => (
                     <section
-                      className="block-editor"
+                      className={`block-editor${collapsedBlocks[index] ? ' collapsed' : ''}`}
                       key={`${block.type}-${index}`}
+                      id={`block-editor-${index}`}
                       draggable
                       onDragStart={() => setDragIndex(index)}
                       onDragOver={(e) => e.preventDefault()}
@@ -455,9 +491,12 @@ function AdminProjects() {
                         setDragIndex(null);
                       }}
                     >
-                      <div className="block-editor-header">
-                        <strong>☰ {labelFor(block.type)}</strong>
-                        <div>
+                      <div className="block-editor-header" onClick={() => toggleCollapse(index)} style={{ cursor: 'pointer' }}>
+                        <strong>
+                          <span className={`collapse-chevron${collapsedBlocks[index] ? ' chevron-collapsed' : ''}`}>▾</span>
+                          {' '}☰ {labelFor(block.type)}
+                        </strong>
+                        <div onClick={(e) => e.stopPropagation()}>
                           <button type="button" onClick={() => moveSection(index, index - 1)}>
                             ↑
                           </button>
@@ -469,10 +508,31 @@ function AdminProjects() {
                           </button>
                         </div>
                       </div>
-                      <BlockFields block={block} index={index} updateBlock={updateBlock} updateBlockData={updateBlockData} uploadImage={uploadImage} />
+                      {!collapsedBlocks[index] && (
+                        <div className="block-editor-body">
+                          <BlockFields block={block} index={index} updateBlock={updateBlock} updateBlockData={updateBlockData} uploadImage={uploadImage} />
+                        </div>
+                      )}
                     </section>
                   ))}
                 </div>
+
+                {project.blocks.length > 0 && (
+                  <div className="add-section-bottom">
+                    <div className="add-section-control">
+                      <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
+                        {sectionTypes.map(([value, label]) => (
+                          <option value={value} key={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="button" onClick={addSection}>
+                        + Add Section
+                      </button>
+                    </div>
+                  </div>
+                )}
               </section>
 
               {project.versions?.length ? (
