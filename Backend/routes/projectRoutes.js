@@ -26,8 +26,21 @@ const createSnapshot = (project) => ({
   savedAt: new Date(),
 });
 
+const slugify = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[/\\]+/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
+};
+
 const normalizeProjectPayload = (body) => {
-  const slug = body.slug || body.id;
+  const rawSlug = body.slug || body.id || body.title || '';
+  const slug = slugify(rawSlug);
 
   return {
     title: body.title,
@@ -83,8 +96,15 @@ router.get('/', async (req, res) => {
 // GET project by slug or legacy id
 router.get('/:slug', async (req, res) => {
   try {
+    const rawSlug = req.params.slug;
+    const cleanSlug = slugify(rawSlug);
     const project = await Project.findOne({
-      $or: [{ slug: req.params.slug }, { id: req.params.slug }],
+      $or: [
+        { slug: rawSlug },
+        { id: rawSlug },
+        { slug: cleanSlug },
+        { id: cleanSlug },
+      ],
     });
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });

@@ -1,7 +1,12 @@
 function HeroSection({ kicker, title, subtitle, image, stats = [], meta = {}, services = [], stack = [] }) {
+  const safeMeta = meta || {};
+  const safeStats = Array.isArray(stats) ? stats : [];
+  const safeServices = Array.isArray(services) ? services : [];
+  const safeStack = Array.isArray(stack) ? stack : [];
+
   const metaItems = [
-    meta.industry ? { label: 'Industry', value: meta.industry } : null,
-    meta.duration ? { label: 'Duration', value: meta.duration } : null,
+    safeMeta.industry ? { label: 'Industry', value: safeMeta.industry } : null,
+    safeMeta.duration ? { label: 'Duration', value: safeMeta.duration } : null,
   ].filter(Boolean);
 
   return (
@@ -9,9 +14,9 @@ function HeroSection({ kicker, title, subtitle, image, stats = [], meta = {}, se
       <div className="container case-hero-grid">
         <div>
           {kicker ? <span className="section-kicker">{kicker}</span> : null}
-          <h1>{title}</h1>
+          <h1>{title || 'Untitled Project'}</h1>
           {subtitle ? <p>{subtitle}</p> : null}
-          {metaItems.length || services.length || stack.length ? (
+          {metaItems.length || safeServices.length || safeStack.length ? (
             <div className="case-meta-panel">
               {metaItems.map((item) => (
                 <div key={item.label}>
@@ -19,26 +24,26 @@ function HeroSection({ kicker, title, subtitle, image, stats = [], meta = {}, se
                   <strong>{item.value}</strong>
                 </div>
               ))}
-              {services.length ? (
+              {safeServices.length ? (
                 <div>
                   <span>Services</span>
-                  <strong>{services.join(', ')}</strong>
+                  <strong>{safeServices.join(', ')}</strong>
                 </div>
               ) : null}
-              {stack.length ? (
+              {safeStack.length ? (
                 <div>
                   <span>Technology</span>
-                  <strong>{stack.join(', ')}</strong>
+                  <strong>{safeStack.join(', ')}</strong>
                 </div>
               ) : null}
             </div>
           ) : null}
-          {stats.length ? (
+          {safeStats.length ? (
             <div className="case-stats">
-              {stats.map((stat) => (
-                <div className="case-stat" key={`${stat.value}-${stat.label}`}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
+              {safeStats.map((stat, idx) => (
+                <div className="case-stat" key={`${stat?.value || idx}-${stat?.label || idx}`}>
+                  <strong>{stat?.value || ''}</strong>
+                  <span>{stat?.label || ''}</span>
                 </div>
               ))}
             </div>
@@ -55,19 +60,22 @@ function HeroSection({ kicker, title, subtitle, image, stats = [], meta = {}, se
 }
 
 function TextSection({ eyebrow, title, body, points = [], band = false }) {
+  const safePoints = Array.isArray(points) ? points.filter(Boolean) : [];
   return (
     <section className={`section case-block ${band ? 'case-band' : ''}`}>
       <div className="container case-two-column">
         <div>
           {eyebrow ? <span className="section-kicker">{eyebrow}</span> : null}
-          <h2>{title}</h2>
+          <h2>{title || ''}</h2>
         </div>
         <div>
           {body ? <p>{body}</p> : null}
-          {points.length ? (
+          {safePoints.length ? (
             <ul className="case-list">
-              {points.map((point) => (
-                <li key={point}>{point}</li>
+              {safePoints.map((point, idx) => (
+                <li key={typeof point === 'string' ? point : idx}>
+                  {typeof point === 'string' ? point : JSON.stringify(point)}
+                </li>
               ))}
             </ul>
           ) : null}
@@ -78,24 +86,33 @@ function TextSection({ eyebrow, title, body, points = [], band = false }) {
 }
 
 function CardSection({ kicker, title, body, items = [], band = false }) {
+  const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
   return (
     <section className={`section case-block ${band ? 'case-band' : ''}`}>
       <div className="container">
-        <div className="section-title">
-          {kicker ? <span className="section-kicker">{kicker}</span> : null}
-          <h2>{title}</h2>
-          {body ? <p>{body}</p> : null}
-        </div>
-        {items.length ? (
+        {title || kicker ? (
+          <div className="section-title">
+            {kicker ? <span className="section-kicker">{kicker}</span> : null}
+            {title ? <h2>{title}</h2> : null}
+            {body ? <p>{body}</p> : null}
+          </div>
+        ) : null}
+        {safeItems.length ? (
           <div className="case-card-grid">
-            {items.map((item) => (
-              <article className="case-card" key={item.title || item.label || item}>
-                {item.label ? <span>{item.label}</span> : null}
-                {item.image ? <img src={item.image} alt="" /> : null}
-                <h3>{item.title || item.label || 'Untitled item'}</h3>
-                {item.body || item.description ? <p>{item.body || item.description}</p> : null}
-              </article>
-            ))}
+            {safeItems.map((item, idx) => {
+              const itemTitle = typeof item === 'object' ? (item?.title || item?.label || 'Untitled item') : String(item);
+              const itemBody = typeof item === 'object' ? (item?.body || item?.description || '') : '';
+              const itemLabel = typeof item === 'object' ? item?.label : null;
+              const itemImg = typeof item === 'object' ? item?.image : null;
+              return (
+                <article className="case-card" key={idx}>
+                  {itemLabel ? <span>{itemLabel}</span> : null}
+                  {itemImg ? <img src={itemImg} alt="" /> : null}
+                  <h3>{itemTitle}</h3>
+                  {itemBody ? <p>{itemBody}</p> : null}
+                </article>
+              );
+            })}
           </div>
         ) : null}
       </div>
@@ -104,6 +121,7 @@ function CardSection({ kicker, title, body, items = [], band = false }) {
 }
 
 function Gallery({ title, images = [] }) {
+  const safeImages = Array.isArray(images) ? images.filter(Boolean) : [];
   return (
     <section className="section case-band case-block">
       <div className="container">
@@ -114,12 +132,18 @@ function Gallery({ title, images = [] }) {
           </div>
         ) : null}
         <div className="case-gallery">
-          {images.map((image) => (
-            <figure key={image.src}>
-              <img src={image.src} alt={image.alt || ''} />
-              {image.caption ? <figcaption>{image.caption}</figcaption> : null}
-            </figure>
-          ))}
+          {safeImages.map((image, idx) => {
+            const src = typeof image === 'string' ? image : image?.src;
+            const alt = typeof image === 'object' ? image?.alt : '';
+            const caption = typeof image === 'object' ? image?.caption : '';
+            if (!src) return null;
+            return (
+              <figure key={idx}>
+                <img src={src} alt={alt || ''} />
+                {caption ? <figcaption>{caption}</figcaption> : null}
+              </figure>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -127,6 +151,7 @@ function Gallery({ title, images = [] }) {
 }
 
 function QuoteSection({ quote, author, role }) {
+  if (!quote) return null;
   return (
     <section className="section case-block">
       <div className="container">
@@ -145,18 +170,19 @@ function QuoteSection({ quote, author, role }) {
 }
 
 function ImpactSection({ title, results = [] }) {
+  const safeResults = Array.isArray(results) ? results.filter(Boolean) : [];
   return (
     <section className="section case-band case-block">
       <div className="container">
         <div className="section-title">
           <span className="section-kicker">Impact</span>
-          <h2>{title}</h2>
+          <h2>{title || 'Impact'}</h2>
         </div>
         <div className="case-impact-grid">
-          {results.map((result) => (
-            <div className="case-impact" key={`${result.value}-${result.label}`}>
-              <strong>{result.value}</strong>
-              <span>{result.label}</span>
+          {safeResults.map((result, idx) => (
+            <div className="case-impact" key={idx}>
+              <strong>{result?.value || ''}</strong>
+              <span>{result?.label || ''}</span>
             </div>
           ))}
         </div>
@@ -166,21 +192,22 @@ function ImpactSection({ title, results = [] }) {
 }
 
 function TimelineSection({ title, items = [] }) {
+  const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
   return (
     <section className="section case-block">
       <div className="container">
         <div className="section-title centered">
           <span className="section-kicker">Timeline</span>
-          <h2>{title}</h2>
+          <h2>{title || 'Timeline'}</h2>
         </div>
         <div className="process-timeline">
-          {items.map((item, index) => (
-            <article className="timeline-item" key={`${item.title}-${index}`}>
+          {safeItems.map((item, index) => (
+            <article className="timeline-item" key={index}>
               <div className="timeline-dot">{String(index + 1).padStart(2, '0')}</div>
               <div className="timeline-content">
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-                {item.label ? <span>{item.label}</span> : null}
+                <h3>{item?.title || ''}</h3>
+                <p>{item?.body || item?.description || ''}</p>
+                {item?.label ? <span>{item.label}</span> : null}
               </div>
             </article>
           ))}
@@ -200,7 +227,7 @@ function CtaSection({ title, body, label, href = '/#contact' }) {
       <div className="container">
         <div className="cta-banner">
           <span className="section-kicker">Next Step</span>
-          <h2>{title}</h2>
+          <h2>{title || 'Ready to start?'}</h2>
           {body ? <p>{body}</p> : null}
           {label ? (
             <a href={href} className="btn btn-primary">
@@ -227,45 +254,49 @@ function UnknownBlock({ type }) {
 }
 
 function renderCaseStudyBlock(block, index) {
-  const key = `${block.type}-${index}`;
+  if (!block || typeof block !== 'object') return null;
+  const blockType = block.type || '';
+  const data = block.data || {};
+  const key = `${blockType}-${index}`;
 
-  switch (block.type) {
+  switch (blockType) {
     case 'hero':
-      return <HeroSection key={key} {...block.data} />;
+      return <HeroSection key={key} {...data} />;
     case 'overview':
-      return <TextSection key={key} eyebrow="Overview" {...block.data} />;
+      return <TextSection key={key} eyebrow="Overview" {...data} />;
     case 'problem':
-      return <CardSection key={key} kicker="Problem" band {...block.data} />;
+      return <CardSection key={key} kicker="Problem" band {...data} />;
     case 'objectives':
-      return <CardSection key={key} kicker="Objectives" {...block.data} />;
+      return <CardSection key={key} kicker="Objectives" {...data} />;
     case 'solution':
-      return <TextSection key={key} eyebrow="Solution" band {...block.data} />;
+      return <TextSection key={key} eyebrow="Solution" band {...data} />;
     case 'feature_grid':
     case 'features':
-      return <CardSection key={key} kicker="Features" items={block.data.features || block.data.items || []} {...block.data} />;
+      return <CardSection key={key} kicker="Features" items={data.features || data.items || []} {...data} />;
     case 'gallery':
-      return <Gallery key={key} {...block.data} />;
+      return <Gallery key={key} {...data} />;
     case 'architecture':
-      return <CardSection key={key} kicker="Architecture" band {...block.data} />;
+      return <CardSection key={key} kicker="Architecture" band {...data} />;
     case 'impact':
-      return <ImpactSection key={key} {...block.data} />;
+      return <ImpactSection key={key} {...data} />;
     case 'challenge':
-      return <CardSection key={key} kicker="Challenge" band {...block.data} />;
+      return <CardSection key={key} kicker="Challenge" band {...data} />;
     case 'timeline':
-      return <TimelineSection key={key} {...block.data} />;
+      return <TimelineSection key={key} {...data} />;
     case 'faq':
-      return <FaqSection key={key} {...block.data} />;
+      return <FaqSection key={key} {...data} />;
     case 'cta':
-      return <CtaSection key={key} {...block.data} />;
+      return <CtaSection key={key} {...data} />;
     case 'quote':
-      return <QuoteSection key={key} {...block.data} />;
+      return <QuoteSection key={key} {...data} />;
     default:
-      return <UnknownBlock key={key} type={block.type} />;
+      return <UnknownBlock key={key} type={blockType} />;
   }
 }
 
 export function CaseStudyPreview({ project }) {
-  const blocks = project.blocks?.length
+  if (!project) return null;
+  const blocks = Array.isArray(project.blocks) && project.blocks.length > 0
     ? project.blocks
     : [
         {
@@ -279,5 +310,5 @@ export function CaseStudyPreview({ project }) {
         },
       ];
 
-  return <>{blocks.map(renderCaseStudyBlock)}</>;
+  return <>{blocks.map((block, idx) => renderCaseStudyBlock(block, idx))}</>;
 }

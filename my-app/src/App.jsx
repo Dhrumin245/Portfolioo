@@ -1016,6 +1016,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/projects/:slug" element={<ProjectDetails />} />
+      <Route path="/projects/*" element={<ProjectDetails />} />
       {/* <Route path="/admin/projects" element={<AdminProjects />} /> */}
     </Routes>
   );

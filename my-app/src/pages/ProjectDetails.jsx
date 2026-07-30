@@ -7,6 +7,8 @@ import SplashCursor from '../components/animations/Animations/SplashCursor/Splas
 import { CaseStudyPreview } from '../components/CaseStudyBlocks';
 import Footer from '../components/Footer';
 import ThemeToggle from '../components/ThemeToggle';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { slugify } from '../utils/slugify';
 import '../assets/css/style.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -101,26 +103,40 @@ function PageShell({ children }) {
 }
 
 function ProjectDetails() {
-  const { slug } = useParams();
+  const params = useParams();
+  // :slug param covers clean slugs; '*' wildcard covers slugs with slashes
+  const rawSlug = params.slug || params['*'] || '';
+  const slug = slugify(rawSlug);
+
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const res = await fetch(apiUrl(`/api/projects/${slug}`));
-        if (!res.ok) return;
+        if (!slug) {
+          setProject(null);
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(apiUrl(`/api/projects/${encodeURIComponent(slug)}`));
+        if (!res.ok) {
+          setProject(null);
+          return;
+        }
 
         const data = await res.json();
         setProject(data);
       } catch (error) {
         console.error('Error fetching project:', error);
+        setProject(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProject();
+
   }, [slug]);
 
   if (loading) {
@@ -159,7 +175,9 @@ function ProjectDetails() {
   return (
     <PageShell>
       <main>
-        <CaseStudyPreview project={project} />
+        <ErrorBoundary>
+          <CaseStudyPreview project={project} />
+        </ErrorBoundary>
       </main>
     </PageShell>
   );

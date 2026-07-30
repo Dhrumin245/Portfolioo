@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '../utils/api';
+import { slugify } from '../utils/slugify';
 import { Link } from 'react-router-dom';
 import { CaseStudyPreview } from '../components/CaseStudyBlocks';
 import '../assets/css/style.css';
@@ -264,7 +265,7 @@ function AdminProjects() {
   };
 
   const saveProject = async (nextStatus) => {
-    const slug = project.slug.trim().toLowerCase();
+    const slug = slugify(project.slug || project.title);
     const payload = {
       ...project,
       slug,
@@ -578,14 +579,25 @@ function BasicInfo({ project, updateProject, toggleChip, handleCoverUpload }) {
       <div className="admin-form-row">
         <label>
           Title
-          <input className="form-control" value={project.title} onChange={(e) => updateProject('title', e.target.value)} required />
+          <input
+            className="form-control"
+            value={project.title}
+            onChange={(e) => {
+              const newTitle = e.target.value;
+              updateProject('title', newTitle);
+              if (!project.slug || project.slug === slugify(project.title)) {
+                updateProject('slug', slugify(newTitle));
+              }
+            }}
+            required
+          />
         </label>
         <label>
           Slug
           <input
             className="form-control"
             value={project.slug}
-            onChange={(e) => updateProject('slug', e.target.value)}
+            onChange={(e) => updateProject('slug', slugify(e.target.value))}
             placeholder="evomind"
             required
           />
