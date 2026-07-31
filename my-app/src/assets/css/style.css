@@ -2627,8 +2627,31 @@ textarea.form-control {
         right: 0;
     }
 
+    nav {
+        gap: 8px;
+    }
+
+    .logo {
+        font-size: 1.1rem;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 1;
+    }
+
+    .logo img {
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .nav-actions {
+        flex-shrink: 0;
+        gap: 8px;
+    }
+
     .hamburger {
         display: block;
+        flex-shrink: 0;
     }
 
     .hamburger.active div:nth-child(1) {
