@@ -13,6 +13,8 @@ describe('Footer component', () => {
 
     expect(screen.getByRole('link', { name: /GitHub/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /LinkedIn/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Instagram/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Facebook/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 4, name: /Services/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 4, name: /Solutions/i })).toBeInTheDocument();
     expect(screen.getByText(/DHRUMIN TECH(NOTECH)? WORLD/i)).toBeInTheDocument();

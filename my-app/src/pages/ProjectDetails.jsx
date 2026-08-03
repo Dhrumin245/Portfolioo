@@ -74,7 +74,7 @@ function PageShell({ children }) {
           <nav>
             <Link to="/" className="logo">
               <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
-              Dhrumin's <span>Tech world</span>
+              Dhrumin's <span>TechnoTech World</span>
             </Link>
             <ul className="nav-links">
               {navItems.map((item) => (
@@ -82,9 +82,15 @@ function PageShell({ children }) {
                   <Link to={item.href}>{item.label}</Link>
                 </li>
               ))}
+              <li className="mobile-theme-item">
+                <span>Appearance</span>
+                <ThemeToggle />
+              </li>
             </ul>
             <div className="nav-actions">
-              <ThemeToggle />
+              <div className="desktop-theme-toggle">
+                <ThemeToggle />
+              </div>
             </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>

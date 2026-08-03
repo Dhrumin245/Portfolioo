@@ -21,6 +21,8 @@ const createSnapshot = (project) => ({
   stack: project.stack,
   image: project.image,
   coverImage: project.coverImage,
+  coverLayout: project.coverLayout || 'side',
+  coverFit: project.coverFit || 'cover',
   blocks: project.blocks,
   status: project.status,
   savedAt: new Date(),
@@ -52,6 +54,8 @@ const normalizeProjectPayload = (body) => {
     stack: Array.isArray(body.stack) ? body.stack : [],
     image: body.image,
     coverImage: body.coverImage || body.image,
+    coverLayout: body.coverLayout || 'side',
+    coverFit: body.coverFit || 'cover',
     status: body.status === 'published' ? 'published' : 'draft',
     publishedAt: body.status === 'published' ? new Date() : undefined,
     blocks: Array.isArray(body.blocks) ? body.blocks : [],
@@ -188,6 +192,8 @@ router.post('/:slug/restore/:versionIndex', requireAdmin, async (req, res) => {
     project.stack = snapshot.stack;
     project.image = snapshot.image;
     project.coverImage = snapshot.coverImage;
+    project.coverLayout = snapshot.coverLayout || 'side';
+    project.coverFit = snapshot.coverFit || 'cover';
     project.blocks = snapshot.blocks;
     project.status = snapshot.status === 'published' ? 'published' : 'draft';
     project.publishedAt = project.status === 'published' ? new Date() : undefined;

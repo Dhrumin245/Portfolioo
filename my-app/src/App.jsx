@@ -465,7 +465,7 @@ function HomePage() {
           <nav>
             <Link to="/" className="logo">
               <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
-              Dhrumin's <span>Tech world</span>
+              Dhrumin's <span>TechnoTech World</span>
             </Link>
             <ul className="nav-links">
               {navItems.map((item) => (
@@ -473,12 +473,18 @@ function HomePage() {
                   <a href={item.href}>{item.label}</a>
                 </li>
               ))}
+              <li className="mobile-theme-item">
+                <span>Appearance</span>
+                <ThemeToggle />
+              </li>
             </ul>
             <div className="nav-actions">
               <a href="#contact" className="nav-cta">
                 Start a Project
               </a>
-              <ThemeToggle />
+              <div className="desktop-theme-toggle">
+                <ThemeToggle />
+              </div>
             </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>
@@ -580,22 +586,27 @@ function HomePage() {
               <span className="section-kicker">Selected Work</span>
               <h2>Websites, APIs, and web apps that feel fast from day one.</h2>
             </div>
-            <div className="projects-grid">
+            <div className={`projects-grid count-${portfolioProjects.length > 3 ? 'many' : portfolioProjects.length}`}>
               {portfolioProjects.map((project, index) => {
                 const stack = project.stack?.length ? project.stack : project.tags ?? [];
+                const coverLayout = project.coverLayout || 'top';
+                const coverFit = project.coverFit || 'contain';
+                const isFeatured = coverLayout === 'full';
 
                 return (
                 <Link
-                  className={`project-card reveal ${index === 0 ? 'featured-project' : ''}`}
+                  className={`project-card reveal ${isFeatured ? 'featured-project' : ''} layout-${coverLayout}`}
                   key={project.title}
                   to={`/projects/${project.slug}`}
                 >
-                  <div className="project-visual">
+                  <div className={`project-visual fit-${coverFit}`}>
                     <span>{project.category || 'Case Study'}</span>
-                    {project.coverImage || project.image ? (
-                      <img src={project.coverImage || project.image} alt="" />
+                    {!(project.coverImage || project.image) ? (
+                      <div className="visual-grid"></div>
                     ) : null}
-                    <div className="visual-grid"></div>
+                    {project.coverImage || project.image ? (
+                      <img src={project.coverImage || project.image} alt={project.title || 'Project preview'} />
+                    ) : null}
                   </div>
                   <div className="project-details">
                     <div className="project-tags">
@@ -616,7 +627,7 @@ function HomePage() {
         <section className="section why-section" id="why-us">
           <div className="container why-grid">
             <div className="why-copy reveal">
-              <span className="section-kicker">Why Dhrumin's Tech world</span>
+              <span className="section-kicker">Why Dhrumin's TechnoTech World</span>
               <h2>The smartest way to build is not fully manual or fully automated.</h2>
               <p>
                 We combine machine speed with human ownership, so you get momentum without
@@ -666,7 +677,7 @@ function HomePage() {
               <h2>Bring the idea. We will bring the engine.</h2>
               <p>
                 Whether you need a sharper company website, a reliable API, or a full web app,
-                Dhrumin's Tech world turns rough requirements into reviewed, launch-ready software.
+                Dhrumin's TechnoTech World turns rough requirements into reviewed, launch-ready software.
               </p>
               <a href="#contact" className="btn btn-primary">
                 Get A Build Plan
@@ -969,7 +980,7 @@ function ProjectComingSoon() {
           <nav>
             <Link to="/" className="logo">
               <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
-              Dhrumin's <span>Tech world</span>
+              Dhrumin's <span>TechnoTech World</span>
             </Link>
             <ul className="nav-links">
               {navItems.map((item) => (
@@ -977,12 +988,18 @@ function ProjectComingSoon() {
                   <Link to={`/${item.href}`}>{item.label}</Link>
                 </li>
               ))}
+              <li className="mobile-theme-item">
+                <span>Appearance</span>
+                <ThemeToggle />
+              </li>
             </ul>
             <div className="nav-actions">
               <Link to="/#contact" className="nav-cta">
                 Start a Project
               </Link>
-              <ThemeToggle />
+              <div className="desktop-theme-toggle">
+                <ThemeToggle />
+              </div>
             </div>
             <div className="hamburger" aria-label="Open navigation" role="button" tabIndex="0">
               <div></div>

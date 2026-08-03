@@ -33,6 +33,8 @@ const defaultProject = {
   stack: [],
   image: '',
   coverImage: '',
+  coverLayout: 'side',
+  coverFit: 'cover',
   status: 'draft',
   blocks: [],
   versions: [],
@@ -375,7 +377,7 @@ function AdminProjects() {
           <nav>
             <Link to="/" className="logo">
               <img src="/logo.png" alt="Dhrumin's TechnoTech Logo" />
-              Dhrumin's <span>Tech world</span>
+              Dhrumin's <span>TechnoTech World</span>
             </Link>
             <div className="footer-links admin-nav">
               <Link to="/">Home</Link>
@@ -617,6 +619,32 @@ function BasicInfo({ project, updateProject, toggleChip, handleCoverUpload }) {
         Upload Cover
         <input className="form-control" type="file" accept="image/*" onChange={(e) => handleCoverUpload(e.target.files?.[0])} />
       </label>
+      <div className="form-grid-2">
+        <label>
+          Card Layout Mode
+          <select
+            className="form-control"
+            value={project.coverLayout || 'side'}
+            onChange={(e) => updateProject('coverLayout', e.target.value)}
+          >
+            <option value="top">📐 Top Banner (Full Width - Best for Landscape Images)</option>
+            <option value="side">🌗 Side-by-side (Compact Split)</option>
+            <option value="full">🖥️ Full Span Card (Wide Hero)</option>
+          </select>
+        </label>
+        <label>
+          Image Fitting & Crop
+          <select
+            className="form-control"
+            value={project.coverFit || 'cover'}
+            onChange={(e) => updateProject('coverFit', e.target.value)}
+          >
+            <option value="cover">🖼️ Cover Fill (Fill container)</option>
+            <option value="contain">🔍 Contain (Show 100% full image, no crop)</option>
+            <option value="top">⬆️ Top Alignment (Focus on navbar / top header)</option>
+          </select>
+        </label>
+      </div>
       {project.coverImage ? (
         <div className="image-preview">
           <img src={project.coverImage} alt="" />

@@ -22,6 +22,8 @@ const projectVersionSchema = new mongoose.Schema(
     stack: [String],
     image: String,
     coverImage: String,
+    coverLayout: { type: String, default: 'side' },
+    coverFit: { type: String, default: 'cover' },
     blocks: [projectBlockSchema],
     status: String,
     savedAt: { type: Date, default: Date.now },
@@ -39,6 +41,8 @@ const projectSchema = new mongoose.Schema({
   stack: [String],
   image: String,
   coverImage: String,
+  coverLayout: { type: String, default: 'side' },
+  coverFit: { type: String, default: 'cover' },
   status: {
     type: String,
     enum: ['draft', 'published'],
